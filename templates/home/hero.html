@@ -1,0 +1,78 @@
+{% load static %}
+
+<section class="relative bg-white overflow-hidden">
+  <!-- Décor flou SaaS -->
+  <div class="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+  <div class="absolute top-1/3 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
+
+  <div class="container mx-auto px-6 md:px-12 py-24 flex flex-col md:flex-row items-center gap-16 relative z-10">
+
+    <!-- Texte -->
+    <div class="md:w-1/2 text-center md:text-left space-y-6">
+
+      <!-- Badge -->
+      <span class="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+        🚀 SaaS pour restaurants modernes
+      </span>
+
+      <h1 class="text-[48px] md:text-[56px] font-extrabold text-gray-900 leading-tight">
+        Gérez votre restaurant <br>
+        <span class="text-primary">plus vite, plus intelligemment</span>
+      </h1>
+
+      <p class="text-[20px] text-gray-600 max-w-xl">
+        OpenFood est une plateforme SaaS qui centralise vos menus, commandes,
+        paiements et clients pour faire grandir votre restaurant sans stress.
+      </p>
+
+      <!-- CTA -->
+      <div class="flex flex-col sm:flex-row gap-4 mt-8 justify-center md:justify-start">
+        <a href="{% url 'inscription' %}"
+           class="px-8 py-4 rounded-xl bg-primary text-white font-bold hover:bg-secondary transition shadow-lg text-center">
+          Commencer gratuitement
+        </a>
+        <a href="#demo"
+           class="px-8 py-4 rounded-xl border-2 border-gray-300 text-gray-800 font-bold hover:border-primary hover:text-primary transition text-center">
+          Voir une démo
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="flex gap-8 mt-10 justify-center md:justify-start text-left">
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900">+300</h3>
+          <p class="text-gray-500 text-sm">Restaurants</p>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900">24/7</h3>
+          <p class="text-gray-500 text-sm">Commandes en ligne</p>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900">+40%</h3>
+          <p class="text-gray-500 text-sm">Revenus moyens</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div class="md:w-1/2 flex justify-center relative">
+      <img
+        src="{% static 'img/bg.png' %}"
+        alt="Dashboard OpenFood"
+        class="w-full max-w-lg  shadow-2xl animate-float"
+      />
+    </div>
+
+  </div>
+</section>
+
+<style>
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+</style>

@@ -1,0 +1,292 @@
+{% extends "admin_user/base.html" %}
+{% block title %}Tables – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 md:p-6">
+
+  <!-- En-tête -->
+  <div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900 mb-1">
+          Gestion des tables
+        </h1>
+        <p class="text-sm text-gray-500">
+          Restaurant : {{ restaurant.name }}
+        </p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <a href="{% url 'table_create' %}" 
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+          <i class="fas fa-plus text-xs"></i>
+          Ajouter une table
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+    <div class="bg-white p-4 rounded-lg border border-gray-100">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 flex items-center justify-center rounded-md bg-gray-50 text-gray-600">
+          <i class="fas fa-chair text-sm"></i>
+        </div>
+        <span class="text-xs text-gray-400">Total</span>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold text-gray-900">{{ tables.count }}</h2>
+        <p class="text-xs text-gray-500">Tables</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg border border-gray-100">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 flex items-center justify-center rounded-md bg-green-50 text-green-600">
+          <i class="fas fa-check-circle text-sm"></i>
+        </div>
+        <span class="text-xs text-gray-400">Actives</span>
+      </div>
+      <div>  <h2 class="text-lg font-semibold text-gray-900">{{ active_count }}</h2>
+        <p class="text-xs text-gray-500">Tables actives</p>
+      
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg border border-gray-100">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 flex items-center justify-center rounded-md bg-blue-50 text-blue-600">
+          <i class="fas fa-qrcode text-sm"></i>
+        </div>
+        <span class="text-xs text-gray-400">QR Codes</span>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold text-gray-900">{{ tables.count }}</h2>
+        <p class="text-xs text-gray-500">Générés</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des tables -->
+  <div class="bg-white rounded-lg border border-gray-100 overflow-hidden">
+    {% if tables %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Numéro</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Capacité</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Statut</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">QR Code</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Dernière mise à jour</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-700 text-xs uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-100">
+          {% for table in tables %}
+          <tr class="hover:bg-gray-50/50 transition-colors duration-150">
+            <!-- Numéro -->
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900">Table #{{ table.number }}</div>
+            </td>
+
+            <!-- Capacité -->
+            <td class="px-4 py-3">
+              <div class="text-gray-600">{{ table.capacity }} personnes</div>
+            </td>
+
+            <!-- Statut -->
+            <td class="px-4 py-3">
+              {% if table.is_active %}
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  Active
+                </div>
+              {% else %}
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                  Inactive
+                </div>
+              {% endif %}
+            </td>
+
+            <!-- QR Code -->
+            <td class="px-4 py-3">
+              {% if table.qr_code %}
+                <a href="{{ table.qr_code.url }}" target="_blank" 
+                   class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 text-xs font-medium">
+                  <i class="fas fa-external-link-alt text-xs"></i>
+                  Voir QR Code
+                </a>
+              {% else %}
+                <span class="text-xs text-gray-400">Non généré</span>
+              {% endif %}
+            </td>
+
+            <!-- Dernière mise à jour -->
+            <td class="px-4 py-3">
+              <div class="text-gray-500 text-xs">{{ table.updated_at|date:"d/m/Y" }}</div>
+              <div class="text-gray-400 text-xs">{{ table.updated_at|time:"H:i" }}</div>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-end gap-1">
+                <!-- Toggle activité -->
+                <form method="post" action="{% url 'table_toggle_active' table.id %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="p-1.5 text-gray-400 hover:text-green-600 transition-colors duration-150"
+                          title="{% if table.is_active %}Désactiver{% else %}Activer{% endif %}">
+                    <i class="fas fa-power-off text-sm"></i>
+                  </button>
+                </form>
+                
+                <!-- Régénérer QR -->
+                <form method="post" action="{% url 'table_regenerate_qr' table.id %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="p-1.5 text-gray-400 hover:text-blue-600 transition-colors duration-150"
+                          title="Régénérer QR Code">
+                    <i class="fas fa-sync-alt text-sm"></i>
+                  </button>
+                </form>
+                
+                <!-- Modifier -->
+                <a href="{% url 'table_update' table.id %}"
+                   class="p-1.5 text-gray-400 hover:text-primary transition-colors duration-150"
+                   title="Modifier">
+                  <i class="fas fa-edit text-sm"></i>
+                </a>
+                
+                <!-- Supprimer -->
+                <button type="button"
+                        onclick="showDeleteModal('Table #{{ table.number }}', '{% url 'table_delete' table.id %}')"
+                        class="p-1.5 text-gray-400 hover:text-red-500 transition-colors duration-150"
+                        title="Supprimer">
+                  <i class="fas fa-trash text-sm"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <!-- Aucune table -->
+    <div class="p-12 text-center">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+        <i class="fas fa-chair text-gray-400 text-lg"></i>
+      </div>
+      <h3 class="text-sm font-medium text-gray-900 mb-1">Aucune table</h3>
+      <p class="text-sm text-gray-500 mb-4">Créez votre première table pour générer des QR Codes.</p>
+      <a href="{% url 'table_create' %}" 
+         class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        <i class="fas fa-plus text-xs"></i>
+        Créer votre première table
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="mt-6">
+    {% for message in messages %}
+    <div class="p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %}">
+      <div class="flex items-center gap-2">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 hidden">
+  <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md transform transition-all duration-200 scale-95 opacity-0">
+    <div class="mb-6">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center">
+        <i class="fas fa-exclamation-triangle text-red-500"></i>
+      </div>
+      <h3 class="text-center text-sm font-medium text-gray-900 mb-1">Supprimer la table</h3>
+      <p id="deleteItemName" class="text-center text-sm text-gray-500 mb-4"></p>
+      <p class="text-center text-xs text-gray-400">
+        Cette action est irréversible.
+      </p>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button id="cancelDeleteBtn"
+              class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors duration-150">
+        Annuler
+      </button>
+      <a id="confirmDeleteBtn"
+         href="#"
+         class="flex-1 px-4 py-2.5 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors duration-150 text-center">
+        Supprimer
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Modal de suppression
+function showDeleteModal(itemName, deleteUrl) {
+  document.getElementById('deleteItemName').textContent = itemName;
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  confirmBtn.href = deleteUrl;
+  
+  const modal = document.getElementById('deleteModal');
+  const modalContent = modal.querySelector('div');
+  
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    modalContent.classList.remove('scale-95', 'opacity-0');
+  }, 10);
+}
+
+// Fermer la modal
+function closeDeleteModal() {
+  const modal = document.getElementById('deleteModal');
+  const modalContent = modal.querySelector('div');
+  
+  modalContent.classList.add('scale-95', 'opacity-0');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 200);
+}
+
+// Événements pour la modal de suppression
+document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+
+// Fermer en cliquant en dehors
+document.getElementById('deleteModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('deleteModal')) {
+    closeDeleteModal();
+  }
+});
+
+// Fermer avec Échap
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.getElementById('deleteModal').classList.contains('hidden')) {
+    closeDeleteModal();
+  }
+});
+
+// Confirmation avant suppression
+document.querySelectorAll('form[action*="delete"]').forEach(form => {
+  form.addEventListener('submit', (e) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
+      e.preventDefault();
+    }
+  });
+});
+</script>
+{% endblock %}

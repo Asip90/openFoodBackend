@@ -1,0 +1,143 @@
+{% extends "admin_user/base.html" %}
+{% block title %}Ajouter une table – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto p-4 md:p-6">
+
+  <!-- En-tête -->
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <a href="{% url 'tables_list' %}" 
+         class="text-gray-400 hover:text-gray-600 transition-colors duration-150">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900">
+          Ajouter une table
+        </h1>
+        <p class="text-sm text-gray-500 mt-0.5">
+          Restaurant : {{ restaurant.name }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire -->
+  <div class="bg-white rounded-lg border border-gray-100 p-6">
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Messages d'erreur -->
+      {% if form.errors %}
+        <div class="bg-red-50 text-red-600 p-4 rounded-lg text-sm border border-red-200">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Numéro de table -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Numéro de table
+        </label>
+        <input type="number" name="number" required min="1"
+          class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                 placeholder:text-gray-400"
+          placeholder="Ex : 1, 2, 3..."
+          value="{{ form.number.value|default:'' }}">
+        {% if form.number.errors %}
+          <p class="text-xs text-red-500 mt-1">{{ form.number.errors.0 }}</p>
+        {% endif %}
+        <p class="text-xs text-gray-400 mt-1">
+          Numéro unique pour identifier la table
+        </p>
+      </div>
+
+      <!-- Capacité -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Capacité (personnes)
+        </label>
+        <input type="number" name="capacity" required min="1" max="20"
+          class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                 placeholder:text-gray-400"
+          placeholder="Ex : 2, 4, 6..."
+          value="{{ form.capacity.value|default:'4' }}">
+        {% if form.capacity.errors %}
+          <p class="text-xs text-red-500 mt-1">{{ form.capacity.errors.0 }}</p>
+        {% endif %}
+        <p class="text-xs text-gray-400 mt-1">
+          Nombre maximum de personnes pour cette table
+        </p>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Description (optionnelle)
+        </label>
+        <textarea name="description" rows="3"
+          class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                 placeholder:text-gray-400"
+          placeholder="Ex : Table près de la fenêtre, terrasse...">{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}
+          <p class="text-xs text-red-500 mt-1">{{ form.description.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Statut -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <label class="text-sm font-medium text-gray-700">
+            Table active
+          </label>
+          <div class="relative">
+            <input type="checkbox" name="is_active" id="is_active" 
+                   class="sr-only peer" 
+                   {% if form.is_active.value|default:True %}checked{% endif %}>
+            <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors duration-150"></div>
+            <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-150 peer-checked:translate-x-5"></div>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400">
+          Une table inactive ne sera pas visible par les clients
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{% url 'tables_list' %}"
+           class="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+          Annuler
+        </a>
+        <button type="submit"
+          class="px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors duration-150">
+          Créer la table
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Information QR Code -->
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="flex items-start gap-3">
+      <div class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+        <i class="fas fa-info-circle text-sm"></i>
+      </div>
+      <div>
+        <h4 class="text-sm font-medium text-blue-900 mb-1">QR Code automatique</h4>
+        <p class="text-xs text-blue-700">
+          Un QR Code sera généré automatiquement pour cette table. Les clients pourront scanner ce QR Code pour accéder au menu et commander.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

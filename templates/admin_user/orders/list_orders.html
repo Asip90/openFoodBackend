@@ -1,0 +1,1215 @@
+{% extends "admin_user/base.html" %}
+
+{% block title %}Commandes – OpenFood{% endblock %}
+
+{% block content %}
+<style>
+  /* Animations pour le menu déroulant */
+  .status-dropdown-menu {
+    animation: fadeInScale 0.1s ease-out;
+  }
+  
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  /* Style pour le hover des boutons dans le menu */
+  .status-dropdown-menu button:hover {
+    transform: translateX(2px);
+    transition: transform 0.1s ease;
+  }
+  </style>
+  <script>
+    // Gestion des menus déroulants de statut
+    document.addEventListener('DOMContentLoaded', function() {
+      // Pour chaque menu déroulant de statut
+      document.querySelectorAll('.custom-status-dropdown').forEach(dropdown => {
+        const button = dropdown.querySelector('button[type="button"]');
+        const menu = dropdown.querySelector('.status-dropdown-menu');
+        
+        // Ouvrir/fermer le menu au clic sur le bouton
+        button.addEventListener('click', function(e) {
+          e.stopPropagation();
+          
+          // Fermer tous les autres menus ouverts
+          document.querySelectorAll('.status-dropdown-menu').forEach(otherMenu => {
+            if (otherMenu !== menu && !otherMenu.classList.contains('hidden')) {
+              otherMenu.classList.add('hidden');
+            }
+          });
+          
+          // Basculer l'état du menu actuel
+          menu.classList.toggle('hidden');
+        });
+        
+        // Fermer le menu quand on clique ailleurs
+        document.addEventListener('click', function(e) {
+          if (!dropdown.contains(e.target)) {
+            menu.classList.add('hidden');
+          }
+        });
+        
+        // Empêcher la fermeture quand on clique dans le menu
+        menu.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+        
+        // Gérer la soumission du formulaire
+        const form = dropdown.querySelector('.change-status-form');
+        form.addEventListener('submit', function(e) {
+          // Optionnel : Ajouter un indicateur de chargement
+          const submitButton = form.querySelector('button[type="submit"]:focus');
+          if (submitButton) {
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            submitButton.disabled = true;
+            
+            // Réactiver le bouton après 2 secondes au cas où la soumission échouerait
+            setTimeout(() => {
+              submitButton.innerHTML = originalText;
+              submitButton.disabled = false;
+            }, 2000);
+          }
+          
+          // La soumission normale du formulaire continue
+        });
+      });
+      
+      // Fermer les menus avec la touche Échap
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.status-dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+          });
+        }
+      });
+    });
+    </script>
+
+<!-- Messages -->
+{% if messages %}
+<div class="mb-6 space-y-2">
+  {% for message in messages %}
+  <div class="p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+    <div class="flex items-center gap-2">
+      <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+      <span>{{ message }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Tableau des commandes -->
+<div class="max-w-7xl mx-auto p-4 md:p-6">
+
+  <!-- Header page -->
+  <div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900 mb-1">
+          Commandes
+        </h1>
+        <p class="text-sm text-gray-500">
+          Restaurant : {{ restaurant.name }}
+        </p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <a href="{% url 'create_manual_order' %}" 
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+          <i class="fas fa-plus text-xs"></i>
+          Créer une commande
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="bg-white rounded-lg border border-gray-100 overflow-hidden">
+    {% if orders %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Commande</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Client</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Table</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Plats</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Montant</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Statut</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Date</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-700 text-xs uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-100">
+          {% for order in orders %}
+          <tr class="hover:bg-gray-50/50 transition-colors duration-150" id="order-{{ order.id }}">
+            <!-- ID -->
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900">#{{ order.id }}</div>
+            </td>
+
+            <!-- Client -->
+            <td class="px-4 py-3">
+              <div class="text-gray-600">{{ order.customer_name|default:"—" }}</div>
+            </td>
+
+            <!-- Table -->
+            <td class="px-4 py-3">
+              <div class="text-gray-900 font-medium">
+                {% if order.table %}
+                  Table {{ order.table.number }}
+                {% else %}
+                  <span class="text-gray-400">—</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Plats (Cliquable pour ouvrir la modale) -->
+            <td class="px-4 py-3">
+              <button type="button"
+                      onclick="openOrderModal('{{ order.id }}')"
+                      class="text-left text-primary hover:text-primary/80 transition-colors duration-150 cursor-pointer group">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium group-hover:underline">
+                    {% with order.items.count as item_count %}
+                      {% if item_count == 0 %}
+                        Aucun plat
+                      {% elif item_count == 1 %}
+                        1 plat
+                      {% else %}
+                        {{ item_count }} plats
+                      {% endif %}
+                    {% endwith %}
+                  </span>
+                  <i class="fas fa-eye text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                  {% for item in order.items.all|slice:":2" %}
+                    {{ item.quantity }}× {{ item.menu_item.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                  {% if order.items.count > 2 %}...{% endif %}
+                </div>
+              </button>
+            </td>
+
+            <!-- Montant -->
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900">{{ order.total_amount }} FCFA</div>
+            </td>
+
+            <!-- Statut avec menu déroulant -->
+            {% comment %} <td class="px-4 py-3">
+              <div class="relative" x-data="{ open: false }">
+                <button type="button"
+                        @click="open = !open"
+                        @click.away="open = false"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
+                          {% if order.status == 'pending' %} bg-yellow-50 text-yellow-700 hover:bg-yellow-100
+                          {% elif order.status == 'confirmed' %} bg-blue-50 text-blue-700 hover:bg-blue-100
+                          {% elif order.status == 'preparing' %} bg-orange-50 text-orange-700 hover:bg-orange-100
+                          {% elif order.status == 'ready' %} bg-green-50 text-green-700 hover:bg-green-100
+                          {% elif order.status == 'delivered' %} bg-teal-50 text-teal-700 hover:bg-teal-100
+                          {% elif order.status == 'cancelled' %} bg-red-50 text-red-700 hover:bg-red-100
+                          {% else %} bg-gray-100 text-gray-600 hover:bg-gray-200
+                          {% endif %}">
+                  <span class="w-1.5 h-1.5 rounded-full 
+                    {% if order.status == 'pending' %} bg-yellow-500
+                    {% elif order.status == 'confirmed' %} bg-blue-500
+                    {% elif order.status == 'preparing' %} bg-orange-500
+                    {% elif order.status == 'ready' %} bg-green-500
+                    {% elif order.status == 'delivered' %} bg-teal-500
+                    {% elif order.status == 'cancelled' %} bg-red-500
+                    {% else %} bg-gray-400
+                    {% endif %}"></span>
+                  <span>
+                    {% if order.status == 'pending' %}En attente
+                    {% elif order.status == 'confirmed' %}Confirmée
+                    {% elif order.status == 'preparing' %}En préparation
+                    {% elif order.status == 'ready' %}Prête
+                    {% elif order.status == 'delivered' %}Livrée
+                    {% elif order.status == 'cancelled' %}Annulée
+                    {% else %}{{ order.status }}
+                    {% endif %}
+                  </span>
+                  <i class="fas fa-chevron-down text-xs ml-1"></i>
+                </button>
+                
+                <!-- Menu déroulant -->
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="transform opacity-0 scale-95"
+                     x-transition:enter-end="transform opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="transform opacity-100 scale-100"
+                     x-transition:leave-end="transform opacity-0 scale-95"
+                     class="absolute left-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
+                     style="display: none;">
+                  <form method="post" 
+                        action="{% url 'order_change_status' order.id %}"
+                        class="change-status-form">
+                    {% csrf_token %}
+                    <div class="py-1">
+                      <button type="submit"
+                              name="status"
+                              value="pending"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'pending' %}bg-yellow-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                        <span>En attente</span>
+                        {% if order.status == 'pending' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="confirmed"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'confirmed' %}bg-blue-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span>Confirmée</span>
+                        {% if order.status == 'confirmed' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="preparing"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'preparing' %}bg-orange-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                        <span>En préparation</span>
+                        {% if order.status == 'preparing' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="ready"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'ready' %}bg-green-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span>Prête</span>
+                        {% if order.status == 'ready' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="delivered"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'delivered' %}bg-teal-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                        <span>Livrée</span>
+                        {% if order.status == 'delivered' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <div class="border-t border-gray-100 mt-1 pt-1">
+                        <button type="submit"
+                                name="status"
+                                value="cancelled"
+                                class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 {% if order.status == 'cancelled' %}bg-red-50{% endif %}">
+                          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                          <span>Annulée</span>
+                          {% if order.status == 'cancelled' %}
+                            <i class="fas fa-check ml-auto text-red-600"></i>
+                          {% endif %}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </td> {% endcomment %}
+            {% comment %} <td class="px-4 py-3">
+              <div class="relative custom-status-dropdown">
+                <!-- Bouton d'affichage du statut actuel -->
+                <button type="button"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
+                          {% if order.status == 'pending' %} bg-yellow-50 text-yellow-700 hover:bg-yellow-100
+                          {% elif order.status == 'confirmed' %} bg-blue-50 text-blue-700 hover:bg-blue-100
+                          {% elif order.status == 'preparing' %} bg-orange-50 text-orange-700 hover:bg-orange-100
+                          {% elif order.status == 'ready' %} bg-green-50 text-green-700 hover:bg-green-100
+                          {% elif order.status == 'delivered' %} bg-teal-50 text-teal-700 hover:bg-teal-100
+                          {% elif order.status == 'cancelled' %} bg-red-50 text-red-700 hover:bg-red-100
+                          {% else %} bg-gray-100 text-gray-600 hover:bg-gray-200
+                          {% endif %}">
+                  <span class="w-1.5 h-1.5 rounded-full 
+                        {% if order.status == 'pending' %} bg-yellow-500
+                        {% elif order.status == 'confirmed' %} bg-blue-500
+                        {% elif order.status == 'preparing' %} bg-orange-500
+                        {% elif order.status == 'ready' %} bg-green-500
+                        {% elif order.status == 'delivered' %} bg-teal-500
+                        {% elif order.status == 'cancelled' %} bg-red-500
+                        {% else %} bg-gray-400
+                        {% endif %}"></span>
+                  <span>
+                    {% if order.status == 'pending' %}En attente
+                    {% elif order.status == 'confirmed' %}Confirmée
+                    {% elif order.status == 'preparing' %}En préparation
+                    {% elif order.status == 'ready' %}Prête
+                    {% elif order.status == 'delivered' %}Livrée
+                    {% elif order.status == 'cancelled' %}Annulée
+                    {% else %}{{ order.status }}
+                    {% endif %}
+                  </span>
+                  <i class="fas fa-chevron-down text-xs ml-1"></i>
+                </button>
+                
+                <!-- Menu déroulant caché -->
+                <div class="status-dropdown-menu absolute left-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-10 hidden">
+                  <form method="post" 
+                        action="{% url 'order_change_status' order.id %}"
+                        class="change-status-form">
+                    {% csrf_token %}
+                    <div class="py-1">
+                      <button type="submit"
+                              name="status"
+                              value="pending"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'pending' %}bg-yellow-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                        <span>En attente</span>
+                        {% if order.status == 'pending' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="confirmed"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'confirmed' %}bg-blue-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span>Confirmée</span>
+                        {% if order.status == 'confirmed' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="preparing"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'preparing' %}bg-orange-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                        <span>En préparation</span>
+                        {% if order.status == 'preparing' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="ready"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'ready' %}bg-green-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span>Prête</span>
+                        {% if order.status == 'ready' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <button type="submit"
+                              name="status"
+                              value="delivered"
+                              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 {% if order.status == 'delivered' %}bg-teal-50{% endif %}">
+                        <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                        <span>Livrée</span>
+                        {% if order.status == 'delivered' %}
+                          <i class="fas fa-check ml-auto text-primary"></i>
+                        {% endif %}
+                      </button>
+                      
+                      <div class="border-t border-gray-100 mt-1 pt-1">
+                        <button type="submit"
+                                name="status"
+                                value="cancelled"
+                                class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 {% if order.status == 'cancelled' %}bg-red-50{% endif %}">
+                          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                          <span>Annulée</span>
+                          {% if order.status == 'cancelled' %}
+                            <i class="fas fa-check ml-auto text-red-600"></i>
+                          {% endif %}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </td> {% endcomment %}
+            <td class="px-4 py-3">
+              <div class="relative custom-status-dropdown">
+                <!-- Bouton d'affichage du statut actuel -->
+                <button type="button"
+                        class="status-dropdown-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
+                          {% if order.status == 'pending' %} bg-yellow-50 text-yellow-700 hover:bg-yellow-100
+                          {% elif order.status == 'confirmed' %} bg-blue-50 text-blue-700 hover:bg-blue-100
+                          {% elif order.status == 'preparing' %} bg-orange-50 text-orange-700 hover:bg-orange-100
+                          {% elif order.status == 'ready' %} bg-green-50 text-green-700 hover:bg-green-100
+                          {% elif order.status == 'delivered' %} bg-teal-50 text-teal-700 hover:bg-teal-100
+                          {% elif order.status == 'cancelled' %} bg-red-50 text-red-700 hover:bg-red-100
+                          {% else %} bg-gray-100 text-gray-600 hover:bg-gray-200
+                          {% endif %}">
+                  <span class="w-1.5 h-1.5 rounded-full 
+                        {% if order.status == 'pending' %} bg-yellow-500
+                        {% elif order.status == 'confirmed' %} bg-blue-500
+                        {% elif order.status == 'preparing' %} bg-orange-500
+                        {% elif order.status == 'ready' %} bg-green-500
+                        {% elif order.status == 'delivered' %} bg-teal-500
+                        {% elif order.status == 'cancelled' %} bg-red-500
+                        {% else %} bg-gray-400
+                        {% endif %}"></span>
+                  <span>
+                    {% if order.status == 'pending' %}En attente
+                    {% elif order.status == 'confirmed' %}Confirmée
+                    {% elif order.status == 'preparing' %}En préparation
+                    {% elif order.status == 'ready' %}Prête
+                    {% elif order.status == 'delivered' %}Livrée
+                    {% elif order.status == 'cancelled' %}Annulée
+                    {% else %}{{ order.status }}
+                    {% endif %}
+                  </span>
+                  <i class="fas fa-chevron-down text-xs ml-1"></i>
+                </button>
+                
+                <!-- Menu déroulant caché -->
+                <div class="status-dropdown-menu absolute left-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-10 hidden">
+                  {% for status_value, status_label in order.STATUS_CHOICES %}
+                  <form method="post" 
+                        action="{% url 'order_change_status' order.id %}"
+                        class="status-option-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="{{ status_value }}">
+                    <button type="submit"
+                            class="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 
+                                   {% if order.status == status_value %}
+                                     {% if status_value == 'pending' %}bg-yellow-50
+                                     {% elif status_value == 'confirmed' %}bg-blue-50
+                                     {% elif status_value == 'preparing' %}bg-orange-50
+                                     {% elif status_value == 'ready' %}bg-green-50
+                                     {% elif status_value == 'delivered' %}bg-teal-50
+                                     {% elif status_value == 'cancelled' %}bg-red-50
+                                     {% endif %}
+                                   {% endif %}">
+                      <span class="w-2 h-2 rounded-full 
+                            {% if status_value == 'pending' %}bg-yellow-500
+                            {% elif status_value == 'confirmed' %}bg-blue-500
+                            {% elif status_value == 'preparing' %}bg-orange-500
+                            {% elif status_value == 'ready' %}bg-green-500
+                            {% elif status_value == 'delivered' %}bg-teal-500
+                            {% elif status_value == 'cancelled' %}bg-red-500
+                            {% else %}bg-gray-400
+                            {% endif %}"></span>
+                      <span>{{ status_label }}</span>
+                      {% if order.status == status_value %}
+                        <i class="fas fa-check ml-auto text-primary"></i>
+                      {% endif %}
+                    </button>
+                  </form>
+                  {% endfor %}
+                </div>
+              </div>
+            </td>
+
+            <!-- Date -->
+            <td class="px-4 py-3">
+              <div class="text-gray-500 text-xs">{{ order.created_at|date:"d/m/Y" }}</div>
+              <div class="text-gray-400 text-xs">{{ order.created_at|time:"H:i" }}</div>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-4 py-3 text-right">
+              <div class="flex items-center justify-end gap-3">
+                <button onclick="openOrderModal('{{ order.id }}')"
+                        class="text-gray-400 hover:text-primary transition-colors duration-150">
+                  <i class="fas fa-eye text-sm"></i>
+                </button>
+                <a href="{% url 'update_order' order.id %}"
+                   class="text-gray-400 hover:text-primary transition-colors duration-150">
+                  <i class="fas fa-edit text-sm"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <!-- Aucune commande -->
+    <div class="p-12 text-center">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+        <i class="fas fa-receipt text-gray-400 text-lg"></i>
+      </div>
+      <h3 class="text-sm font-medium text-gray-900 mb-1">Aucune commande</h3>
+      <p class="text-sm text-gray-500 mb-4">Aucune commande n'a été passée pour le moment.</p>
+      <a href="{% url 'create_manual_order' %}" 
+         class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        <i class="fas fa-plus text-xs"></i>
+        Créer votre première commande
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Pagination (à ajouter si nécessaire) -->
+  {% if orders.has_other_pages %}
+  <div class="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
+    <div class="text-sm text-gray-500">
+      Affichage de {{ orders.start_index }} à {{ orders.end_index }} sur {{ orders.paginator.count }} commandes
+    </div>
+    <div class="flex items-center gap-2">
+      {% if orders.has_previous %}
+      <a href="?page={{ orders.previous_page_number }}" 
+         class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors duration-150">
+        Précédent
+      </a>
+      {% endif %}
+      
+      {% for num in orders.paginator.page_range %}
+        {% if orders.number == num %}
+        <span class="px-3 py-2 rounded-lg bg-primary text-white text-sm">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}" 
+           class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors duration-150">
+          {{ num }}
+        </a>
+        {% endif %}
+      {% endfor %}
+      
+      {% if orders.has_next %}
+      <a href="?page={{ orders.next_page_number }}" 
+         class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors duration-150">
+        Suivant
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal pour afficher les détails de la commande -->
+<div id="orderModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <!-- Overlay -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeOrderModal()"></div>
+
+    <!-- Modal Container -->
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modalTitle">
+              Détails de la commande
+            </h3>
+            
+            <!-- Détails de la commande -->
+            <div class="space-y-4">
+              <!-- Informations générales -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <p class="text-sm text-gray-500">Commande #</p>
+                  <p class="font-medium" id="modalOrderId"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Client</p>
+                  <p class="font-medium" id="modalCustomerName"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Table</p>
+                  <p class="font-medium" id="modalTable"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Statut</p>
+                  <span id="modalStatus"></span>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Date</p>
+                  <p class="font-medium" id="modalDate"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Montant total</p>
+                  <p class="font-medium text-green-600" id="modalTotalAmount"></p>
+                </div>
+              </div>
+
+              <!-- Liste des plats -->
+              <div>
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Plats commandés</h4>
+                <div class="border rounded-lg overflow-hidden">
+                  <div id="modalItemsList" class="divide-y">
+                    <!-- Les items seront ajoutés ici par JavaScript -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div id="modalNotesContainer" class="hidden">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Notes</h4>
+                <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg" id="modalNotes"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" 
+                onclick="closeOrderModal()"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+<script>
+  // Gestion des menus déroulants de statut
+  document.addEventListener('DOMContentLoaded', function() {
+    // Pour chaque menu déroulant de statut
+    document.querySelectorAll('.custom-status-dropdown').forEach(dropdown => {
+      const button = dropdown.querySelector('.status-dropdown-btn');
+      const menu = dropdown.querySelector('.status-dropdown-menu');
+      
+      // Ouvrir/fermer le menu au clic sur le bouton
+      button.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Fermer tous les autres menus ouverts
+        document.querySelectorAll('.status-dropdown-menu').forEach(otherMenu => {
+          if (otherMenu !== menu && !otherMenu.classList.contains('hidden')) {
+            otherMenu.classList.add('hidden');
+          }
+        });
+        
+        // Basculer l'état du menu actuel
+        menu.classList.toggle('hidden');
+      });
+      
+      // Fermer le menu quand on clique ailleurs
+      document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+      
+      // Empêcher la fermeture quand on clique dans le menu
+      menu.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+      
+      // Gérer la soumission des formulaires dans le menu
+      dropdown.querySelectorAll('.status-option-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+          // Ajouter un indicateur de chargement
+          const submitButton = this.querySelector('button[type="submit"]');
+          const originalText = submitButton.innerHTML;
+          submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          submitButton.disabled = true;
+          
+          // Cacher le menu
+          menu.classList.add('hidden');
+          
+          // La soumission normale du formulaire continue
+          // (pas de e.preventDefault() - le formulaire se soumet normalement)
+        });
+      });
+    });
+    
+    // Fermer les menus avec la touche Échap
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.status-dropdown-menu').forEach(menu => {
+          menu.classList.add('hidden');
+        });
+      }
+    });
+  });
+  
+  // Code pour la modale (gardez votre code existant pour la modale)
+  const ordersData = {
+    {% for order in orders %}
+    '{{ order.id }}': {
+      id: '{{ order.id }}',
+      customer_name: '{{ order.customer_name|default:"—" }}',
+      table: '{{ order.table.number|default:"—" }}',
+      status: '{{ order.status }}',
+      status_display: `{% if order.status == 'pending' %}En attente{% elif order.status == 'confirmed' %}Confirmée{% elif order.status == 'preparing' %}En préparation{% elif order.status == 'ready' %}Prête{% elif order.status == 'delivered' %}Livrée{% elif order.status == 'cancelled' %}Annulée{% else %}{{ order.status }}{% endif %}`,
+      status_class: `{% if order.status == 'pending' %}bg-yellow-50 text-yellow-700{% elif order.status == 'confirmed' %}bg-blue-50 text-blue-700{% elif order.status == 'preparing' %}bg-orange-50 text-orange-700{% elif order.status == 'ready' %}bg-green-50 text-green-700{% elif order.status == 'delivered' %}bg-teal-50 text-teal-700{% elif order.status == 'cancelled' %}bg-red-50 text-red-700{% else %}bg-gray-100 text-gray-600{% endif %}`,
+      date: '{{ order.created_at|date:"d/m/Y H:i" }}',
+      total_amount: '{{ order.total_amount }} FCFA',
+      notes: '{{ order.notes|default:"" }}',
+      items: [
+        {% for item in order.items.all %}
+        {
+          name: '{{ item.menu_item.name }}',
+          quantity: {{ item.quantity }},
+          price: '{{ item.price }} FCFA',
+          total: '{{ item.get_total }} FCFA'
+        },
+        {% endfor %}
+      ]
+    },
+    {% endfor %}
+  };
+  
+  function openOrderModal(orderId) {
+    const order = ordersData[orderId];
+    if (!order) return;
+  
+    // Mettre à jour les informations générales
+    document.getElementById('modalOrderId').textContent = `#${order.id}`;
+    document.getElementById('modalCustomerName').textContent = order.customer_name;
+    document.getElementById('modalTable').textContent = order.table;
+    document.getElementById('modalDate').textContent = order.date;
+    document.getElementById('modalTotalAmount').textContent = order.total_amount;
+    
+    // Mettre à jour le statut
+    const statusElement = document.getElementById('modalStatus');
+    statusElement.textContent = order.status_display;
+    statusElement.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${order.status_class}`;
+    
+    // Mettre à jour les notes
+    const notesContainer = document.getElementById('modalNotesContainer');
+    const notesElement = document.getElementById('modalNotes');
+    if (order.notes && order.notes.trim() !== '') {
+      notesElement.textContent = order.notes;
+      notesContainer.classList.remove('hidden');
+    } else {
+      notesContainer.classList.add('hidden');
+    }
+    
+    // Mettre à jour la liste des plats
+    const itemsList = document.getElementById('modalItemsList');
+    itemsList.innerHTML = '';
+    
+    order.items.forEach(item => {
+      const itemElement = document.createElement('div');
+      itemElement.className = 'p-3 hover:bg-gray-50';
+      itemElement.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <p class="font-medium text-gray-900">${item.name}</p>
+            <p class="text-sm text-gray-500">Quantité: ${item.quantity}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-medium text-gray-900">${item.total}</p>
+            <p class="text-sm text-gray-500">${item.price} unité</p>
+          </div>
+        </div>
+      `;
+      itemsList.appendChild(itemElement);
+    });
+    
+    // Afficher la modale
+    document.getElementById('orderModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+  }
+  
+  function closeOrderModal() {
+    document.getElementById('orderModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+  }
+  
+  // Fermer la modale avec la touche Échap
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeOrderModal();
+    }
+  });
+  </script>
+{% endblock %}
+{% comment %} {% extends "admin_user/base.html" %}
+
+{% block title %}Commandes – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 md:p-6">
+
+  <!-- Header page -->
+  <div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900 mb-1">
+          Commandes
+        </h1>
+        <p class="text-sm text-gray-500">
+          Restaurant : {{ restaurant.name }}
+        </p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <a href="{% url 'create_manual_order' %}" 
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+          <i class="fas fa-plus text-xs"></i>
+          Créer une commande
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="bg-white rounded-lg border border-gray-100 overflow-hidden">
+    {% if orders %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Commande</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Client</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Table</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Plats</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Montant</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Statut</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Date</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-700 text-xs uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-100">
+          {% for order in orders %}
+          <tr class="hover:bg-gray-50/50 transition-colors duration-150">
+            <!-- ID -->
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900">#{{ order.id }}</div>
+            </td>
+
+            <!-- Client -->
+            <td class="px-4 py-3">
+              <div class="text-gray-600">{{ order.customer_name|default:"—" }}</div>
+            </td>
+
+            <!-- Table -->
+            <td class="px-4 py-3">
+              <div class="text-gray-900 font-medium">
+                {% if order.table %}
+                  Table {{ order.table.number }}
+                {% else %}
+                  <span class="text-gray-400">—</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Plats (Cliquable pour ouvrir la modale) -->
+            <td class="px-4 py-3">
+              <button type="button"
+                      onclick="openOrderModal('{{ order.id }}')"
+                      class="text-left text-primary hover:text-primary/80 transition-colors duration-150 cursor-pointer group">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium group-hover:underline">
+                    {% with order.items.count as item_count %}
+                      {% if item_count == 0 %}
+                        Aucun plat
+                      {% elif item_count == 1 %}
+                        1 plat
+                      {% else %}
+                        {{ item_count }} plats
+                      {% endif %}
+                    {% endwith %}
+                  </span>
+                  <i class="fas fa-eye text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                  {% for item in order.items.all|slice:":2" %}
+                    {{ item.quantity }}× {{ item.menu_item.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                  {% if order.items.count > 2 %}...{% endif %}
+                </div>
+              </button>
+            </td>
+
+            <!-- Montant -->
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900">{{ order.total_amount }} FCFA</div>
+            </td>
+
+            <!-- Statut -->
+            <td class="px-4 py-3">
+              {% if order.status == "pending" %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                  En attente
+                </span>
+              {% elif order.status == "paid" %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  Payée
+                </span>
+              {% elif order.status == "completed" %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  Terminée
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                  {{ order.status }}
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Date -->
+            <td class="px-4 py-3">
+              <div class="text-gray-500 text-xs">{{ order.created_at|date:"d/m/Y" }}</div>
+              <div class="text-gray-400 text-xs">{{ order.created_at|time:"H:i" }}</div>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-4 py-3 text-right">
+              <div class="flex items-center justify-end gap-3">
+                <button onclick="openOrderModal('{{ order.id }}')"
+                        class="text-gray-400 hover:text-primary transition-colors duration-150">
+                  <i class="fas fa-eye text-sm"></i>
+                </button>
+                <a href="{% url 'update_order' order.id %}"
+                   class="text-gray-400 hover:text-primary transition-colors duration-150">
+                  <i class="fas fa-edit text-sm"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <!-- Aucune commande -->
+    <div class="p-12 text-center">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+        <i class="fas fa-receipt text-gray-400 text-lg"></i>
+      </div>
+      <h3 class="text-sm font-medium text-gray-900 mb-1">Aucune commande</h3>
+      <p class="text-sm text-gray-500 mb-4">Aucune commande n'a été passée pour le moment.</p>
+      <a href="{% url 'create_manual_order' %}" 
+         class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        <i class="fas fa-plus text-xs"></i>
+        Créer votre première commande
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Pagination (à ajouter si nécessaire) -->
+  {% if orders.has_other_pages %}
+  <div class="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
+    <div class="text-sm text-gray-500">
+      Affichage de {{ orders.start_index }} à {{ orders.end_index }} sur {{ orders.paginator.count }} commandes
+    </div>
+    <div class="flex items-center gap-2">
+      {% if orders.has_previous %}
+      <a href="?page={{ orders.previous_page_number }}" 
+         class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors duration-150">
+        Précédent
+      </a>
+      {% endif %}
+      
+      {% for num in orders.paginator.page_range %}
+        {% if orders.number == num %}
+        <span class="px-3 py-2 rounded-lg bg-primary text-white text-sm">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}" 
+           class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors duration-150">
+          {{ num }}
+        </a>
+        {% endif %}
+      {% endfor %}
+      
+      {% if orders.has_next %}
+      <a href="?page={{ orders.next_page_number }}" 
+         class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors duration-150">
+        Suivant
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal pour afficher les détails de la commande -->
+<div id="orderModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <!-- Overlay -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeOrderModal()"></div>
+
+    <!-- Modal Container -->
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modalTitle">
+              Détails de la commande
+            </h3>
+            
+            <!-- Détails de la commande -->
+            <div class="space-y-4">
+              <!-- Informations générales -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <p class="text-sm text-gray-500">Commande #</p>
+                  <p class="font-medium" id="modalOrderId"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Client</p>
+                  <p class="font-medium" id="modalCustomerName"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Table</p>
+                  <p class="font-medium" id="modalTable"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Statut</p>
+                  <span id="modalStatus"></span>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Date</p>
+                  <p class="font-medium" id="modalDate"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Montant total</p>
+                  <p class="font-medium text-green-600" id="modalTotalAmount"></p>
+                </div>
+              </div>
+
+              <!-- Liste des plats -->
+              <div>
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Plats commandés</h4>
+                <div class="border rounded-lg overflow-hidden">
+                  <div id="modalItemsList" class="divide-y">
+                    <!-- Les items seront ajoutés ici par JavaScript -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div id="modalNotesContainer" class="hidden">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Notes</h4>
+                <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg" id="modalNotes"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" 
+                onclick="closeOrderModal()"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Données des commandes pour la modale (à remplacer par une requête AJAX si nécessaire)
+const ordersData = {
+  {% for order in orders %}
+  '{{ order.id }}': {
+    id: '{{ order.id }}',
+    customer_name: '{{ order.customer_name|default:"—" }}',
+    table: '{{ order.table.number|default:"—" }}',
+    status: '{{ order.status }}',
+    status_display: '{% if order.status == "pending" %}En attente{% elif order.status == "paid" %}Payée{% elif order.status == "completed" %}Terminée{% else %}{{ order.status }}{% endif %}',
+    status_class: '{% if order.status == "pending" %}bg-yellow-100 text-yellow-700{% elif order.status == "paid" %}bg-blue-100 text-blue-700{% elif order.status == "completed" %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}',
+    date: '{{ order.created_at|date:"d/m/Y H:i" }}',
+    total_amount: '{{ order.total_amount }} FCFA',
+    notes: '{{ order.notes|default:"" }}',
+    items: [
+      {% for item in order.items.all %}
+      {
+        name: '{{ item.menu_item.name }}',
+        quantity: {{ item.quantity }},
+        price: '{{ item.price }} FCFA',
+        total: '{{ item.get_total }} FCFA'
+      },
+      {% endfor %}
+    ]
+  },
+  {% endfor %}
+};
+
+function openOrderModal(orderId) {
+  const order = ordersData[orderId];
+  if (!order) return;
+
+  // Mettre à jour les informations générales
+  document.getElementById('modalOrderId').textContent = `#${order.id}`;
+  document.getElementById('modalCustomerName').textContent = order.customer_name;
+  document.getElementById('modalTable').textContent = order.table;
+  document.getElementById('modalDate').textContent = order.date;
+  document.getElementById('modalTotalAmount').textContent = order.total_amount;
+  
+  // Mettre à jour le statut
+  const statusElement = document.getElementById('modalStatus');
+  statusElement.textContent = order.status_display;
+  statusElement.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status_class}`;
+  
+  // Mettre à jour les notes
+  const notesContainer = document.getElementById('modalNotesContainer');
+  const notesElement = document.getElementById('modalNotes');
+  if (order.notes && order.notes.trim() !== '') {
+    notesElement.textContent = order.notes;
+    notesContainer.classList.remove('hidden');
+  } else {
+    notesContainer.classList.add('hidden');
+  }
+  
+  // Mettre à jour la liste des plats
+  const itemsList = document.getElementById('modalItemsList');
+  itemsList.innerHTML = '';
+  
+  order.items.forEach(item => {
+    const itemElement = document.createElement('div');
+    itemElement.className = 'p-3 hover:bg-gray-50';
+    itemElement.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="flex-1">
+          <p class="font-medium text-gray-900">${item.name}</p>
+          <p class="text-sm text-gray-500">Quantité: ${item.quantity}</p>
+        </div>
+        <div class="text-right">
+          <p class="font-medium text-gray-900">${item.total}</p>
+          <p class="text-sm text-gray-500">${item.price} unité</p>
+        </div>
+      </div>
+    `;
+    itemsList.appendChild(itemElement);
+  });
+  
+  // Afficher la modale
+  document.getElementById('orderModal').classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+}
+
+function closeOrderModal() {
+  document.getElementById('orderModal').classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+// Fermer la modale avec la touche Échap
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeOrderModal();
+  }
+});
+</script>
+{% endblock %} {% endcomment %}

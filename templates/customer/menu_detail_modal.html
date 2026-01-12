@@ -1,0 +1,240 @@
+
+<!-- menu_detail_modal.html -->
+<div 
+    x-show="showModal" 
+    @click.away="showModal = false"
+    class="fixed inset-0 z-50 overflow-y-auto"
+    style="display: none;"
+>
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+        
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <template x-if="currentItem">
+                <div>
+                    <!-- Image -->
+                    <template x-if="currentItem.image_url">
+                        <div class="h-64 w-full overflow-hidden">
+                            <img 
+                                :src="currentItem.image_url" 
+                                :alt="currentItem.name" 
+                                class="w-full h-full object-cover"
+                            >
+                        </div>
+                    </template>
+                    
+                    <!-- Content -->
+                    <div class="bg-white px-6 pt-6 pb-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900" x-text="currentItem.name"></h3>
+                                <p class="mt-2 text-sm text-gray-500" x-text="currentItem.category"></p>
+                            </div>
+                            
+                            <div class="text-right">
+                                <div class="text-2xl font-bold secondary-text" 
+                                     x-text="`${(currentItem.discount_price || currentItem.price).toFixed(2)} €`">
+                                </div>
+                                <template x-if="currentItem.discount_price">
+                                    <div class="text-sm text-gray-400 line-through" 
+                                         x-text="`${currentItem.price} €`">
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="mt-6">
+                            <h4 class="text-lg font-medium text-gray-900">Description</h4>
+                            <p class="mt-2 text-gray-600" x-text="currentItem.description || 'Aucune description disponible.'"></p>
+                        </div>
+                        
+                        <!-- Ingrédients -->
+                        <template x-if="currentItem.ingredients">
+                            <div class="mt-6">
+                                <h4 class="text-lg font-medium text-gray-900">Ingrédients</h4>
+                                <p class="mt-2 text-gray-600" x-text="currentItem.ingredients"></p>
+                            </div>
+                        </template>
+                        
+                        <!-- Allergènes -->
+                        <template x-if="currentItem.allergens">
+                            <div class="mt-6">
+                                <h4 class="text-lg font-medium text-gray-900">Allergènes</h4>
+                                <p class="mt-2 text-gray-600" x-text="currentItem.allergens"></p>
+                            </div>
+                        </template>
+                        
+                        <!-- Tags -->
+                        <div class="mt-6 flex flex-wrap gap-2">
+                            <template x-if="currentItem.is_vegetarian">
+                                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                                    Végétarien
+                                </span>
+                            </template>
+                            <template x-if="currentItem.is_vegan">
+                                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                                    Vegan
+                                </span>
+                            </template>
+                            <template x-if="currentItem.is_spicy">
+                                <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                                    Épicé
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+                        <button 
+                            @click="showModal = false"
+                            type="button"
+                            class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Fermer
+                        </button>
+                        <button 
+                            @click="addToCart(currentItem.id); showModal = false;"
+                            type="button"
+                            class="px-6 py-2 secondary-bg text-white font-medium rounded-lg hover:opacity-90 transition-opacity"
+                        >
+                            Ajouter au panier
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% comment %} {% comment %} 
+    Ce template est une modal vide qui sera remplie dynamiquement via AJAX
+    lorsqu'un utilisateur clique sur un élément du menu.
+
+
+<div id="menu-detail-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden transition-opacity duration-300">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-transform duration-300 ease-out scale-95 modal-content">
+        <!-- En-tête du modal -->
+        <div class="flex justify-between items-center border-b border-gray-200 p-6 bg-gray-50 rounded-t-lg">
+            <h2 id="modal-item-name" class="text-3xl font-bold text-gray-800"></h2>
+            <button onclick="closeModal('menu-detail-modal')" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Corps du modal - Détails de l'article -->
+        <div class="p-6">
+            <div class="mb-6">
+                <img id="modal-item-image" src="" alt="" class="w-full h-64 object-cover rounded-lg shadow-md mb-4 hidden">
+                <p id="modal-item-category" class="text-sm text-gray-500 mb-2"></p>
+                <p id="modal-item-description" class="text-gray-700 leading-relaxed text-lg mb-4"></p>
+                
+                <div class="flex items-baseline justify-between mb-4">
+                    <span id="modal-item-price" class="text-4xl font-extrabold text-primary-color"></span>
+                    <span id="modal-item-discount-price" class="text-xl text-gray-500 line-through ml-2"></span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-gray-700 text-md mb-6">
+                    <div>
+                        <strong class="text-gray-800">Ingrédients:</strong>
+                        <p id="modal-item-ingredients" class="text-gray-600"></p>
+                    </div>
+                    <div>
+                        <strong class="text-gray-800">Allergènes:</strong>
+                        <p id="modal-item-allergens" class="text-gray-600"></p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <span id="modal-item-vegetarian" class="badge hidden bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">Végétarien</span>
+                    <span id="modal-item-vegan" class="badge hidden bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium">Vegan</span>
+                    <span id="modal-item-spicy" class="badge hidden bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">Épicé 🔥</span>
+                    <span id="modal-item-prep-time" class="badge hidden bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"></span>
+                </div>
+            </div>
+
+            <!-- Bouton Ajouter au panier -->
+            <button id="modal-add-to-cart" class="w-full bg-primary-color text-white py-4 rounded-lg text-xl font-bold hover:bg-opacity-90 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-primary-color focus:ring-opacity-50"
+                    data-item-id="">
+                Ajouter au panier
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showItemDetails(itemId) {
+        $.ajax({
+            url: `{% url 'get_item_details' item_id='0000' %}`.replace('0000', itemId),
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const item = response.item;
+                    $('#modal-item-name').text(item.name);
+                    $('#modal-item-description').text(item.description);
+                    $('#modal-item-category').text(item.category ? item.category : '');
+
+                    if (item.image_url) {
+                        $('#modal-item-image').attr('src', item.image_url).removeClass('hidden');
+                    } else {
+                        $('#modal-item-image').addClass('hidden');
+                    }
+                    
+                    if (item.discount_price) {
+                        $('#modal-item-price').text(parseFloat(item.discount_price).toFixed(2) + '€');
+                        $('#modal-item-discount-price').text(parseFloat(item.price).toFixed(2) + '€').removeClass('hidden');
+                    } else {
+                        $('#modal-item-price').text(parseFloat(item.price).toFixed(2) + '€');
+                        $('#modal-item-discount-price').addClass('hidden');
+                    }
+
+                    $('#modal-item-ingredients').text(item.ingredients || 'Non spécifié');
+                    $('#modal-item-allergens').text(item.allergens || 'Aucun');
+
+                    // Badges
+                    $('#modal-item-vegetarian').toggleClass('hidden', !item.is_vegetarian);
+                    $('#modal-item-vegan').toggleClass('hidden', !item.is_vegan);
+                    $('#modal-item-spicy').toggleClass('hidden', !item.is_spicy);
+                    if (item.preparation_time) {
+                        $('#modal-item-prep-time').text(`Prép. ${item.preparation_time} min`).removeClass('hidden');
+                    } else {
+                        $('#modal-item-prep-time').addClass('hidden');
+                    }
+                    
+                    $('#modal-add-to-cart').data('item-id', item.id);
+                    openModal('menu-detail-modal');
+                } else {
+                    alert('Erreur: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Impossible de charger les détails de l\'article.');
+            }
+        });
+    }
+
+    // Event listener for "Ajouter au panier" button in modal
+    $(document).on('click', '#modal-add-to-cart', function() {
+        const itemId = $(this).data('item-id');
+        $.ajax({
+            url: `{% url 'update_cart' table_token=table_token %}`,
+            type: 'POST',
+            data: JSON.stringify({ item_id: itemId, action: 'add' }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    updateCartDisplay(response.total, response.count);
+                    closeModal('menu-detail-modal');
+                    alert('Article ajouté au panier !'); // Or a more subtle toast notification
+                } else {
+                    alert('Erreur lors de l\'ajout au panier.');
+                }
+            },
+            error: function() {
+                alert('Une erreur est survenue.');
+            }
+        });
+    });
+</script> {% endcomment %}

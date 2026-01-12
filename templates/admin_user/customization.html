@@ -1,0 +1,661 @@
+{% extends "admin_user/base.html" %}
+
+{% block title %}Personnalisation - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 md:p-6">
+
+  <!-- En-tête -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900 mb-1">
+          Personnalisation du restaurant
+        </h1>
+        <p class="text-sm text-gray-500">
+          Personnalisez l'apparence de votre menu en ligne
+        </p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <a href="{% url 'reset_customization' %}" 
+           onclick="return confirm('Voulez-vous vraiment réinitialiser toutes vos personnalisations ? Cette action est irréversible.');"
+           class="text-sm text-red-600 hover:text-red-800 transition-colors duration-150 flex items-center gap-2">
+          <i class="fas fa-redo text-xs"></i>
+          Réinitialiser
+        </a>
+        <a href="{% url 'dashboard' %}" 
+           class="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-150 flex items-center gap-2">
+          <i class="fas fa-arrow-left text-xs"></i>
+          Retour au dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="mb-6">
+    {% for message in messages %}
+    <div class="p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-700{% elif message.tags == 'info' %}bg-blue-50 border-blue-200 text-blue-700{% else %}bg-gray-50 border-gray-200 text-gray-700{% endif %}">
+      <div class="flex items-center gap-2">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'info' %}fa-info-circle{% else %}fa-bell{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <!-- Formulaire -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6">
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Activer/Désactiver le thème -->
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div>
+            <h3 class="text-sm font-medium text-gray-900 mb-1">Thème personnalisé</h3>
+            <p class="text-xs text-gray-500">Activez ou désactivez le thème personnalisé</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="use_custom_theme" value="on" 
+                   class="sr-only peer"
+                   {% if customization.use_custom_theme %}checked{% endif %}>
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
+        <!-- Couleurs -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i class="fas fa-palette text-primary text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Couleurs</h3>
+          </div>
+          
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-2">
+                Couleur principale
+              </label>
+              <div class="flex items-center gap-3">
+                <input type="color" 
+                       id="primary_color" 
+                       name="primary_color"
+                       value="{{ customization.primary_color|default:'#16a34a' }}"
+                       class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer">
+                <div class="flex-1">
+                  <input type="text" 
+                         id="primary_color_hex" 
+                         name="primary_color_hex"
+                         value="{{ customization.primary_color|default:'#16a34a' }}"
+                         class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                         pattern="^#[0-9A-Fa-f]{6}$"
+                         title="Format hexadécimal: #RRGGBB">
+                </div>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Utilisée pour les boutons et éléments principaux</p>
+            </div>
+            
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-2">
+                Couleur secondaire
+              </label>
+              <div class="flex items-center gap-3">
+                <input type="color" 
+                       id="secondary_color" 
+                       name="secondary_color"
+                       value="{{ customization.secondary_color|default:'#f97316' }}"
+                       class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer">
+                <div class="flex-1">
+                  <input type="text" 
+                         id="secondary_color_hex" 
+                         name="secondary_color_hex"
+                         value="{{ customization.secondary_color|default:'#f97316' }}"
+                         class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                         pattern="^#[0-9A-Fa-f]{6}$"
+                         title="Format hexadécimal: #RRGGBB">
+                </div>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Utilisée pour les accents et éléments secondaires</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i class="fas fa-image text-primary text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Logo</h3>
+          </div>
+          
+          <div>
+            <div class="mb-4">
+              <p class="text-xs text-gray-500 mb-2">Logo actuel :</p>
+              {% if customization.logo %}
+              <div class="relative group">
+                <div class="w-32 h-16 rounded-lg border border-gray-200 overflow-hidden">
+                  <img src="{{ customization.logo.url }}" 
+                       alt="Logo actuel" 
+                       class="w-full h-full object-contain"
+                       id="currentLogo">
+                </div>
+                <button type="button" 
+                        onclick="document.getElementById('remove_logo').value = 'true'; document.getElementById('currentLogo').style.opacity = '0.5'; this.style.display = 'none';"
+                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              {% else %}
+              <div class="w-32 h-16 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
+                <p class="text-xs text-gray-400">Aucun logo</p>
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="mt-1">
+              <label for="logo-upload" class="cursor-pointer">
+                <div class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-lg hover:border-primary/50 transition-colors duration-150">
+                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <i class="fas fa-cloud-upload-alt text-gray-300 text-xl mb-2"></i>
+                    <p class="text-xs text-gray-500">Télécharger un logo</p>
+                    <p class="text-xs text-gray-400 mt-1">PNG, JPG, WEBP jusqu'à 5MB</p>
+                  </div>
+                  <input id="logo-upload" type="file" name="logo" accept="image/*"
+                         class="hidden" onchange="previewLogo(this)">
+                </div>
+              </label>
+              <p class="text-xs text-gray-400 mt-2">Taille recommandée : 200×100 pixels</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image de couverture -->
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i class="fas fa-image text-primary text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Image de couverture</h3>
+          </div>
+          
+          <div>
+            <div class="mb-4">
+              <p class="text-xs text-gray-500 mb-2">Image actuelle :</p>
+              {% if customization.cover_image %}
+              <div class="relative group">
+                <div class="w-full h-24 rounded-lg border border-gray-200 overflow-hidden">
+                  <img src="{{ customization.cover_image.url }}" 
+                       alt="Couverture actuelle" 
+                       class="w-full h-full object-cover"
+                       id="currentCover">
+                </div>
+                <button type="button" 
+                        onclick="document.getElementById('remove_cover').value = 'true'; document.getElementById('currentCover').style.opacity = '0.5'; this.style.display = 'none';"
+                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              {% else %}
+              <div class="w-full h-24 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
+                <p class="text-xs text-gray-400">Aucune image de couverture</p>
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="mt-1">
+              <label for="cover-upload" class="cursor-pointer">
+                <div class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-200 rounded-lg hover:border-primary/50 transition-colors duration-150">
+                  <div class="flex flex-col items-center justify-center">
+                    <i class="fas fa-cloud-upload-alt text-gray-300 text-lg mb-1"></i>
+                    <p class="text-xs text-gray-500">Télécharger une image</p>
+                  </div>
+                  <input id="cover-upload" type="file" name="cover_image" accept="image/*"
+                         class="hidden" onchange="previewCover(this)">
+                </div>
+              </label>
+              <p class="text-xs text-gray-400 mt-2">Taille recommandée : 1200×400 pixels</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typographie -->
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i class="fas fa-font text-primary text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Typographie</h3>
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-2">
+              Police de caractères
+            </label>
+            <select id="font_family" name="font_family"
+                    class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+              <option value="inter" {% if customization.font_family == 'inter' %}selected{% endif %}>
+                Inter - Moderne et lisible
+              </option>
+              <option value="poppins" {% if customization.font_family == 'poppins' or not customization.font_family %}selected{% endif %}>
+                Poppins - Élégante et arrondie
+              </option>
+              <option value="montserrat" {% if customization.font_family == 'montserrat' %}selected{% endif %}>
+                Montserrat - Géométrique et professionnelle
+              </option>
+              <option value="roboto" {% if customization.font_family == 'roboto' %}selected{% endif %}>
+                Roboto - Simple et universelle
+              </option>
+            </select>
+            <p class="text-xs text-gray-400 mt-2">
+              Cette police sera utilisée sur le menu en ligne de vos clients
+            </p>
+          </div>
+        </div>
+
+        <!-- Champs cachés pour suppression d'images -->
+        <input type="hidden" id="remove_logo" name="remove_logo" value="false">
+        <input type="hidden" id="remove_cover" name="remove_cover" value="false">
+
+        <!-- Actions -->
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center justify-end gap-3">
+            <button type="reset" 
+                    class="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150"
+                    onclick="resetForm()">
+              Réinitialiser le formulaire
+            </button>
+            <button type="submit" 
+                    class="px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors duration-150 flex items-center gap-2">
+              <i class="fas fa-save text-xs"></i>
+              Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Aperçu -->
+    <div class="space-y-6">
+      <div class="bg-white rounded-lg border border-gray-100 p-6">
+        <div class="flex items-center gap-2 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-eye text-blue-600 text-sm"></i>
+          </div>
+          <h3 class="text-sm font-medium text-gray-900">Aperçu en direct</h3>
+          <span class="ml-auto text-xs px-2 py-1 rounded-full {% if customization.use_custom_theme %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+            {% if customization.use_custom_theme %}Thème activé{% else %}Thème désactivé{% endif %}
+          </span>
+        </div>
+        
+        <div class="p-6 border border-gray-200 rounded-lg bg-gradient-to-br from-gray-50 to-white" 
+             id="previewContainer">
+          
+          <!-- Image de couverture dans l'aperçu -->
+          {% if customization.cover_image %}
+          <div class="w-full h-32 rounded-lg overflow-hidden mb-4">
+            <img src="{{ customization.cover_image.url }}" 
+                 alt="Couverture" 
+                 id="previewCover"
+                 class="w-full h-full object-cover">
+          </div>
+          {% else %}
+          <div id="previewCoverPlaceholder" 
+               class="w-full h-32 rounded-lg bg-gradient-to-r from-primary/20 to-secondary/20 mb-4 flex items-center justify-center">
+            <p class="text-sm text-gray-500">Image de couverture</p>
+          </div>
+          {% endif %}
+          
+          <div class="text-center mb-6">
+            {% if customization.logo %}
+            <img src="{{ customization.logo.url }}" 
+                 alt="Logo" 
+                 id="previewLogo"
+                 class="w-32 h-16 mx-auto mb-4 object-contain">
+            {% else %}
+            <div id="previewLogoPlaceholder" 
+                 class="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary text-white flex items-center justify-center text-xl font-bold">
+              {{ restaurant.name|slice:":2"|upper }}
+            </div>
+            {% endif %}
+            
+            <h4 id="restaurantNamePreview" class="text-lg font-semibold text-gray-900 mb-1">
+              {{ restaurant.name }}
+            </h4>
+            <p class="text-sm text-gray-500">Menu en ligne</p>
+          </div>
+          
+          <div class="space-y-3 mb-6">
+            <button class="w-full py-2.5 rounded-lg font-medium transition-colors" id="previewPrimaryBtn">
+              <i class="fas fa-shopping-cart mr-2"></i>
+              Commander maintenant
+            </button>
+            
+            <button class="w-full py-2.5 rounded-lg font-medium border transition-colors" id="previewSecondaryBtn">
+              <i class="fas fa-list mr-2"></i>
+              Voir le menu complet
+            </button>
+          </div>
+          
+          <div class="pt-6 border-t border-gray-200">
+            <h6 class="text-sm font-medium text-gray-900 mb-2" id="previewHeading">
+              Spécialité du chef
+            </h6>
+            <p id="previewText" class="text-sm text-gray-600 mb-4">
+              Découvrez notre plat signature préparé avec des ingrédients frais et locaux. Une expérience culinaire unique qui met en valeur les saveurs de la région.
+            </p>
+            
+            <div class="flex items-center justify-between text-xs text-gray-500">
+              <span id="previewFontFamily">
+                Police: {{ customization.get_font_family_display|default:"Poppins" }}
+              </span>
+              <span id="previewColors">
+                Couleurs personnalisées
+              </span>
+            </div>
+          </div>
+          
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <p class="text-xs text-gray-400 flex items-center gap-1.5">
+              <i class="fas fa-info-circle text-gray-300"></i>
+              Cet aperçu montre comment vos clients verront votre menu en ligne.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conseils -->
+      <div class="bg-white rounded-lg border border-gray-100 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
+            <i class="fas fa-lightbulb text-yellow-600 text-sm"></i>
+          </div>
+          <h3 class="text-sm font-medium text-gray-900">Conseils de personnalisation</h3>
+        </div>
+        
+        <div class="space-y-3">
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-palette text-primary text-xs"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-700 mb-1">Couleurs contrastées</p>
+              <p class="text-xs text-gray-600">Choisissez des couleurs qui offrent un bon contraste pour une meilleure lisibilité.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-image text-primary text-xs"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-700 mb-1">Images optimisées</p>
+              <p class="text-xs text-gray-600">Utilisez des images de bonne qualité mais optimisées pour le web (max 500KB).</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-mobile-alt text-primary text-xs"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-700 mb-1">Responsive design</p>
+              <p class="text-xs text-gray-600">Votre personnalisation s'adapte automatiquement aux mobiles et tablettes.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-undo text-primary text-xs"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-700 mb-1">Réinitialisation facile</p>
+              <p class="text-xs text-gray-600">Vous pouvez à tout moment réinitialiser votre thème aux valeurs par défaut.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Éléments du formulaire
+    const primaryColorInput = document.getElementById('primary_color');
+    const primaryColorHex = document.getElementById('primary_color_hex');
+    const secondaryColorInput = document.getElementById('secondary_color');
+    const secondaryColorHex = document.getElementById('secondary_color_hex');
+    const logoInput = document.getElementById('logo-upload');
+    const coverInput = document.getElementById('cover-upload');
+    const fontFamilySelect = document.getElementById('font_family');
+    const useCustomThemeCheckbox = document.querySelector('input[name="use_custom_theme"]');
+    
+    // Éléments de prévisualisation
+    const previewContainer = document.getElementById('previewContainer');
+    const previewLogo = document.getElementById('previewLogo');
+    const previewLogoPlaceholder = document.getElementById('previewLogoPlaceholder');
+    const previewCover = document.getElementById('previewCover');
+    const previewCoverPlaceholder = document.getElementById('previewCoverPlaceholder');
+    const previewPrimaryBtn = document.getElementById('previewPrimaryBtn');
+    const previewSecondaryBtn = document.getElementById('previewSecondaryBtn');
+    const restaurantNamePreview = document.getElementById('restaurantNamePreview');
+    const previewHeading = document.getElementById('previewHeading');
+    const previewText = document.getElementById('previewText');
+    const previewFontFamily = document.getElementById('previewFontFamily');
+    const previewColors = document.getElementById('previewColors');
+    
+    // Synchronisation des champs couleur
+    function syncColorInputs() {
+        primaryColorHex.value = primaryColorInput.value;
+        secondaryColorHex.value = secondaryColorInput.value;
+        updatePreview();
+    }
+    
+    // Synchronisation inverse (hex vers color picker)
+    function syncColorFromHex(input, colorPicker) {
+        const hexValue = input.value;
+        if (/^#[0-9A-Fa-f]{6}$/.test(hexValue)) {
+            colorPicker.value = hexValue;
+            updatePreview();
+        }
+    }
+    
+    // Mise à jour de la prévisualisation
+    function updatePreview() {
+        // Couleurs
+        const primaryColor = primaryColorInput.value;
+        const secondaryColor = secondaryColorInput.value;
+        
+        // Appliquer les couleurs aux boutons
+        if (previewPrimaryBtn) {
+            previewPrimaryBtn.style.backgroundColor = primaryColor;
+            previewPrimaryBtn.style.color = getContrastColor(primaryColor);
+            previewPrimaryBtn.style.border = 'none';
+        }
+        
+        if (previewSecondaryBtn) {
+            previewSecondaryBtn.style.borderColor = secondaryColor;
+            previewSecondaryBtn.style.color = secondaryColor;
+            previewSecondaryBtn.style.backgroundColor = 'transparent';
+            previewSecondaryBtn.style.borderWidth = '1px';
+        }
+        
+        // Mettre à jour le placeholder du logo
+        if (previewLogoPlaceholder) {
+            previewLogoPlaceholder.style.backgroundColor = primaryColor;
+            previewLogoPlaceholder.style.color = getContrastColor(primaryColor);
+        }
+        
+        // Mettre à jour le placeholder de la couverture
+        if (previewCoverPlaceholder) {
+            previewCoverPlaceholder.style.background = `linear-gradient(to right, ${primaryColor}20, ${secondaryColor}20)`;
+        }
+        
+        // Mettre à jour la police
+        const fontFamily = getFontFamily(fontFamilySelect.value);
+        const fontDisplayName = fontFamilySelect.options[fontFamilySelect.selectedIndex].text.split(' - ')[0];
+        
+        if (previewContainer) previewContainer.style.fontFamily = fontFamily;
+        if (restaurantNamePreview) restaurantNamePreview.style.fontFamily = fontFamily;
+        if (previewHeading) previewHeading.style.fontFamily = fontFamily;
+        if (previewText) previewText.style.fontFamily = fontFamily;
+        if (previewFontFamily) previewFontFamily.textContent = `Police: ${fontDisplayName}`;
+        if (previewColors) previewColors.textContent = `Couleurs: ${primaryColor}, ${secondaryColor}`;
+        
+        // Mettre à jour le thème activé/désactivé
+        const themeStatus = useCustomThemeCheckbox.checked;
+        if (previewContainer) {
+            if (!themeStatus) {
+                previewContainer.style.opacity = '0.6';
+                previewContainer.style.filter = 'grayscale(50%)';
+            } else {
+                previewContainer.style.opacity = '1';
+                previewContainer.style.filter = 'grayscale(0%)';
+            }
+        }
+    }
+    
+    // Convertir la valeur de police en famille CSS
+    function getFontFamily(fontValue) {
+        const fontMap = {
+            'inter': "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+            'poppins': "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif",
+            'montserrat': "'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif",
+            'roboto': "'Roboto', -apple-system, BlinkMacSystemFont, sans-serif"
+        };
+        return fontMap[fontValue] || "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif";
+    }
+    
+    // Calculer la couleur de contraste (noir ou blanc)
+    function getContrastColor(hexColor) {
+        hexColor = hexColor.replace('#', '');
+        const r = parseInt(hexColor.substr(0, 2), 16);
+        const g = parseInt(hexColor.substr(2, 2), 16);
+        const b = parseInt(hexColor.substr(4, 2), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.5 ? '#000000' : '#ffffff';
+    }
+    
+    // Prévisualisation du logo uploadé
+    window.previewLogo = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewLogo) {
+                    previewLogo.src = e.target.result;
+                } else if (previewLogoPlaceholder) {
+                    const newLogo = document.createElement('img');
+                    newLogo.src = e.target.result;
+                    newLogo.alt = "Logo preview";
+                    newLogo.className = 'w-32 h-16 mx-auto mb-4 object-contain';
+                    newLogo.id = 'previewLogo';
+                    previewLogoPlaceholder.parentElement.replaceChild(newLogo, previewLogoPlaceholder);
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+    
+    // Prévisualisation de la couverture uploadée
+    window.previewCover = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewCover) {
+                    previewCover.src = e.target.result;
+                } else if (previewCoverPlaceholder) {
+                    const newCover = document.createElement('img');
+                    newCover.src = e.target.result;
+                    newCover.alt = "Cover preview";
+                    newCover.className = 'w-full h-32 object-cover rounded-lg mb-4';
+                    newCover.id = 'previewCover';
+                    previewCoverPlaceholder.parentElement.replaceChild(newCover, previewCoverPlaceholder);
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+    
+    // Réinitialisation du formulaire
+    window.resetForm = function() {
+        primaryColorInput.value = '{{ default_colors.primary|default:"#16a34a" }}';
+        secondaryColorInput.value = '{{ default_colors.secondary|default:"#f97316" }}';
+        fontFamilySelect.value = 'poppins';
+        useCustomThemeCheckbox.checked = true;
+        syncColorInputs();
+    };
+    
+    // Événements
+    primaryColorInput.addEventListener('input', syncColorInputs);
+    secondaryColorInput.addEventListener('input', syncColorInputs);
+    primaryColorHex.addEventListener('input', () => syncColorFromHex(primaryColorHex, primaryColorInput));
+    secondaryColorHex.addEventListener('input', () => syncColorFromHex(secondaryColorHex, secondaryColorInput));
+    fontFamilySelect.addEventListener('change', updatePreview);
+    useCustomThemeCheckbox.addEventListener('change', updatePreview);
+    
+    // Initialiser la prévisualisation
+    syncColorInputs();
+    
+    // Charger les polices Google Fonts
+    const fontLinks = {
+        'inter': 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+        'poppins': 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap',
+        'montserrat': 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap',
+        'roboto': 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'
+    };
+    
+    // Charger toutes les polices au démarrage
+    Object.values(fontLinks).forEach(link => {
+        const existingLink = document.querySelector(`link[href="${link}"]`);
+        if (!existingLink) {
+            const newLink = document.createElement('link');
+            newLink.href = link;
+            newLink.rel = 'stylesheet';
+            document.head.appendChild(newLink);
+        }
+    });
+    
+    // Effet de survol pour les boutons d'aperçu
+    if (previewPrimaryBtn) {
+        previewPrimaryBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-1px)';
+            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+        });
+        previewPrimaryBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    }
+    
+    if (previewSecondaryBtn) {
+        previewSecondaryBtn.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(0,0,0,0.02)';
+        });
+        previewSecondaryBtn.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = 'transparent';
+        });
+    }
+});
+</script>
+
+<style>
+/* Animation pour les changements de prévisualisation */
+#previewContainer * {
+    transition: all 0.3s ease;
+}
+
+/* Style pour les boutons de prévisualisation */
+#previewPrimaryBtn, #previewSecondaryBtn {
+    transition: all 0.2s ease;
+}
+</style>
+{% endblock %}

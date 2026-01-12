@@ -1,0 +1,342 @@
+<!-- customer/menu.html -->
+{% extends 'customer/base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Hero -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold mb-4 text-primary">{{ restaurant.name }}</h1>
+        <p class="text-lg text-gray-600">Table {{ table.name }}</p>
+    </div>
+    
+    <!-- Categories -->
+    <div class="flex overflow-x-auto space-x-2 mb-8 pb-4">
+        <button onclick="filterCategory('all')" 
+                class="px-6 py-2 bg-primary text-white rounded-full whitespace-nowrap">
+            Tous
+        </button>
+        {% for category in categories %}
+        <button onclick="filterCategory('{{ category.id }}')" 
+                class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-full whitespace-nowrap hover:bg-gray-50">
+            {{ category.name }}
+        </button>
+        {% endfor %}
+    </div>
+    
+    <!-- Menu Items -->
+    <div id="menuItems" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for category in categories %}
+            {% for item in category.items.all %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow" 
+                 data-category="{{ category.id }}">
+                <!-- Image -->
+                <div class="h-48 bg-gray-100 overflow-hidden">
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" 
+                         class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i class="ri-image-line text-4xl text-gray-400"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Content -->
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-xl font-bold">{{ item.name }}</h3>
+                        <div class="text-right">
+                            <p class="text-xl font-bold text-secondary">
+                                {% if item.discount_price %}
+                                    {{ item.discount_price }} €
+                                {% else %}
+                                    {{ item.price }} €
+                                {% endif %}
+                            </p>
+                            {% if item.discount_price %}
+                            <p class="text-sm text-gray-400 line-through">{{ item.price }} €</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-4 line-clamp-2">
+                        {{ item.description|default:"Notre spécialité maison" }}
+                    </p>
+                    
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        {% if item.is_vegetarian %}
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            Végétarien
+                        </span>
+                        {% endif %}
+                        {% if item.is_vegan %}
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            Vegan
+                        </span>
+                        {% endif %}
+                        {% if item.is_spicy %}
+                        <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                            Épicé
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex space-x-3">
+                        <button onclick="showItemDetails('{{ item.id }}')"
+                                class="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            Détails
+                        </button>
+                        <button onclick="addToCart('{{ item.id }}', this)"
+                                class="flex-1 py-2 bg-primary text-white rounded-lg hover:opacity-90">
+                            <i class="ri-shopping-cart-line"></i> Ajouter
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16">
+        <i class="ri-search-line text-4xl text-gray-400 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900">Aucun article trouvé</h3>
+        <p class="text-gray-500">Essayez une autre catégorie ou recherche</p>
+    </div>
+</div>
+
+<script>
+function filterCategory(categoryId) {
+    const items = document.querySelectorAll('#menuItems > div');
+    const emptyState = document.getElementById('emptyState');
+    let visibleCount = 0;
+    
+    items.forEach(item => {
+        if (categoryId === 'all' || item.dataset.category === categoryId) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    emptyState.classList.toggle('hidden', visibleCount > 0);
+}
+</script>
+{% endblock %}
+
+{% comment %} {% extends "customer/base.html" %}
+{% load static %}
+
+{% block title %}Menu - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-5xl font-extrabold text-center text-gray-900 mb-12 animate-fade-in" style="color: var(--primary-color);">
+        Notre Menu Exquis
+    </h1>
+
+    <!-- Recherche et Filtres -->
+    <div class="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="relative w-full md:w-1/2">
+            <input type="text" id="search-input" placeholder="Rechercher un plat, un ingrédient..." 
+                   class="w-full py-4 pl-14 pr-6 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-primary-color focus:ring-opacity-30 text-lg transition-all duration-300">
+            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="w-full md:w-1/2 flex justify-center md:justify-end">
+            <div class="relative inline-block text-left w-full md:w-auto">
+                <select id="category-filter" class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-4 px-6 pr-10 rounded-full shadow-lg leading-tight focus:outline-none focus:ring-4 focus:ring-primary-color focus:ring-opacity-30 text-lg transition-all duration-300">
+                    <option value="all">Toutes les catégories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.slug }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
+                    <svg class="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catégories et Articles du Menu -->
+    <div id="menu-items-container">
+        {% for category in categories %}
+            <section id="category-{{ category.slug }}" class="mb-16 category-section">
+                <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center md:text-left animate-slide-in-up" style="color: var(--secondary-color);">
+                    {{ category.name }}
+                </h2>
+                <p class="text-lg text-gray-600 mb-8 text-center md:text-left max-w-2xl mx-auto md:mx-0">{{ category.description }}</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {% for item in category.items.all %}
+                        <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col item-card"
+                             data-item-name="{{ item.name|lower }}"
+                             data-item-ingredients="{{ item.ingredients|lower }}"
+                             data-item-description="{{ item.description|lower }}"
+                             data-category-slug="{{ category.slug }}">
+                            
+                            {% if item.image %}
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-60 object-cover">
+                            {% else %}
+                                <div class="w-full h-60 bg-gray-100 flex items-center justify-center text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 7v10l-2 2h20l-2-2V7m0 0H4m0 0V5a2 2 0 012-2h12a2 2 0 012 2v2M4 7h16" />
+                                    </svg>
+                                </div>
+                            {% endif %}
+
+                            <div class="p-6 flex-grow flex flex-col">
+                                <h3 class="text-2xl font-semibold text-gray-800 mb-2">{{ item.name }}</h3>
+                                <p class="text-gray-600 text-md mb-4 flex-grow">{{ item.description|truncatechars:100 }}</p>
+                                
+                                <div class="flex items-center justify-between mt-auto">
+                                    <div class="flex items-baseline">
+                                        {% if item.discount_price %}
+                                            <span class="text-3xl font-bold text-primary-color">{{ item.discount_price|floatformat:2 }}€</span>
+                                            <span class="text-lg text-gray-500 line-through ml-2">{{ item.price|floatformat:2 }}€</span>
+                                        {% else %}
+                                            <span class="text-3xl font-bold text-primary-color">{{ item.price|floatformat:2 }}€</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        {% if item.is_spicy %}<span class="text-red-500" title="Épicé">🌶️</span>{% endif %}
+                                        {% if item.is_vegetarian %}<span class="text-green-500" title="Végétarien">🌿</span>{% endif %}
+                                        {% if item.is_vegan %}<span class="text-emerald-500" title="Vegan">🌱</span>{% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-6 flex space-x-4">
+                                    <button onclick="showItemDetails('{{ item.id }}')" 
+                                            class="flex-1 bg-gray-100 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-300 flex items-center justify-center text-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        Détails
+                                    </button>
+                                    <button onclick="addToCart('{{ item.id }}')" 
+                                            class="flex-1 bg-primary-color text-white py-3 px-4 rounded-lg font-bold hover:bg-opacity-90 transition-colors duration-300 flex items-center justify-center text-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Ajouter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+    </div>
+
+    <!-- Message si aucun article trouvé -->
+    <div id="no-items-message" class="hidden text-center py-16 text-gray-600 text-xl">
+        Aucun article ne correspond à votre recherche.
+    </div>
+
+</div>
+
+{% include "customer/cart.html" %}
+{% include "customer/menu_detail_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animation pour le titre
+    $('.animate-fade-in').removeClass('opacity-0').addClass('opacity-100');
+    $('.animate-slide-in-up').each(function(i) {
+        $(this).delay(i * 100).queue(function(next) {
+            $(this).removeClass('translate-y-4 opacity-0').addClass('translate-y-0 opacity-100');
+            next();
+        });
+    });
+
+    function addToCart(itemId) {
+        $.ajax({
+            url: `{% url 'update_cart' table_token=table_token %}`,
+            type: 'POST',
+            data: JSON.stringify({ item_id: itemId, action: 'add' }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    updateCartDisplay(response.total, response.count);
+                    $('#cart-count-mobile').text(response.count);
+                    // Optionnel: Afficher un toast de confirmation
+                    console.log('Article ajouté au panier !');
+                } else {
+                    alert('Erreur lors de l\'ajout au panier.');
+                }
+            },
+            error: function() {
+                alert('Une erreur est survenue.');
+            }
+        });
+    }
+
+    // Fonction de filtrage et recherche
+    $(document).ready(function() {
+        const $searchInput = $('#search-input');
+        const $categoryFilter = $('#category-filter');
+        const $itemCards = $('.item-card');
+        const $categorySections = $('.category-section');
+        const $noItemsMessage = $('#no-items-message');
+
+        function filterMenuItems() {
+            const searchTerm = $searchInput.val().toLowerCase();
+            const selectedCategory = $categoryFilter.val();
+            let itemsFound = 0;
+
+            $categorySections.each(function() {
+                let categoryItemsFound = 0;
+                const $currentCategorySection = $(this);
+                const categorySlug = $currentCategorySection.attr('id').replace('category-', '');
+
+                $currentCategorySection.find('.item-card').each(function() {
+                    const $card = $(this);
+                    const itemName = $card.data('item-name');
+                    const itemIngredients = $card.data('item-ingredients');
+                    const itemDescription = $card.data('item-description');
+                    const itemCategorySlug = $card.data('category-slug');
+
+                    const matchesSearch = itemName.includes(searchTerm) || 
+                                          itemIngredients.includes(searchTerm) ||
+                                          itemDescription.includes(searchTerm);
+                    const matchesCategory = selectedCategory === 'all' || itemCategorySlug === selectedCategory;
+
+                    if (matchesSearch && matchesCategory) {
+                        $card.removeClass('hidden');
+                        categoryItemsFound++;
+                        itemsFound++;
+                    } else {
+                        $card.addClass('hidden');
+                    }
+                });
+
+                // Cacher/afficher les titres de catégorie si tous leurs articles sont cachés
+                if (categoryItemsFound > 0) {
+                    $currentCategorySection.removeClass('hidden');
+                } else {
+                    $currentCategorySection.addClass('hidden');
+                }
+            });
+
+            if (itemsFound === 0) {
+                $noItemsMessage.removeClass('hidden');
+            } else {
+                $noItemsMessage.addClass('hidden');
+            }
+        }
+
+        $searchInput.on('keyup', filterMenuItems);
+        $categoryFilter.on('change', filterMenuItems);
+    });
+</script>
+{% endblock %} {% endcomment %}

@@ -1,0 +1,418 @@
+{% extends "admin_user/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen p-6 md:p-10">
+
+  <div class="max-w-7xl mx-auto">
+
+    <!-- En-tête -->
+    <div class="mb-8 md:mb-12">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <h1 class="text-2xl md:text-3xl font-bold text-dark">
+          Dashboard – {{ restaurant.name }}
+        </h1>
+        <div class="text-sm text-gray-500">
+          Mis à jour à {{ current_time|time:"H:i" }}
+        </div>
+      </div>
+      <p class="text-gray-600">Vue d'ensemble de l'activité de votre restaurant</p>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-10">
+      <div class="bg-white p-5 rounded-xl border border-gray-100 hover:border-primary/20 transition-all duration-200 hover:shadow-md">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <i class="fas fa-receipt text-lg"></i>
+          </div>
+          <div class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+            Total
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Commandes</p>
+          <h2 class="text-2xl font-bold text-dark">{{ total_orders }}</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-gray-100 hover:border-primary/20 transition-all duration-200 hover:shadow-md">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+            <i class="fas fa-calendar-day text-lg"></i>
+          </div>
+          <div class="text-xs font-medium px-2 py-1 rounded-full bg-secondary/10 text-secondary">
+            Aujourd'hui
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Commandes</p>
+          <h2 class="text-2xl font-bold text-dark">{{ today_orders }}</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-gray-100 hover:border-primary/20 transition-all duration-200 hover:shadow-md">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-600">
+            <i class="fas fa-coins text-lg"></i>
+          </div>
+          <div class="text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-600">
+            Chiffre
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">CA Total</p>
+          <h2 class="text-2xl font-bold text-dark">{{ total_revenue }} FCFA</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-gray-100 hover:border-primary/20 transition-all duration-200 hover:shadow-md">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+            <i class="fas fa-utensils text-lg"></i>
+          </div>
+          <div class="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-600">
+            Actifs
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Menus</p>
+          <h2 class="text-2xl font-bold text-dark">{{ active_menu_items }}</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-gray-100 hover:border-primary/20 transition-all duration-200 hover:shadow-md">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-red-100 text-red-500">
+            <i class="fas fa-chair text-lg"></i>
+          </div>
+          <div class="text-xs font-medium px-2 py-1 rounded-full bg-red-100 text-red-500">
+            Occupées
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Tables</p>
+          <h2 class="text-2xl font-bold text-dark">{{ active_tables }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS SECTION -->
+    <div class="mb-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Graphique des commandes -->
+        <div class="bg-white rounded-xl border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-semibold text-dark text-lg flex items-center gap-2">
+                <i class="fas fa-chart-line text-primary"></i>
+                Commandes (7 jours)
+              </h3>
+              <p class="text-sm text-gray-500 mt-1">Évolution quotidienne des commandes</p>
+            </div>
+            <div class="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
+              Hebdomadaire
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="ordersChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Graphique des types -->
+        <div class="bg-white rounded-xl border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-semibold text-dark text-lg flex items-center gap-2">
+                <i class="fas fa-pizza-slice text-secondary"></i>
+                Types de commandes
+              </h3>
+              <p class="text-sm text-gray-500 mt-1">Répartition par catégorie</p>
+            </div>
+            <div class="text-xs px-3 py-1 rounded-full bg-secondary/10 text-secondary font-medium">
+              Ce mois-ci
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="typeChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS RAPIDES -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6">
+      <h3 class="font-semibold text-dark text-lg mb-6">Actions rapides</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <a href="{% url 'orders_list' %}" class="group p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all duration-200">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+              <i class="fas fa-plus text-sm"></i>
+            </div>
+            <div>
+              <h4 class="font-medium text-dark group-hover:text-primary transition-colors duration-200">Nouvelle commande</h4>
+              <p class="text-xs text-gray-500">Créer manuellement</p>
+            </div>
+          </div>
+        </a>
+        
+        <a href="{% url 'menus_list' %}" class="group p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all duration-200">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+              <i class="fas fa-edit text-sm"></i>
+            </div>
+            <div>
+              <h4 class="font-medium text-dark group-hover:text-primary transition-colors duration-200">Modifier menu</h4>
+              <p class="text-xs text-gray-500">Mettre à jour</p>
+            </div>
+          </div>
+        </a>
+        
+        <a href="{% url 'tables_list' %}" class="group p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all duration-200">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+              <i class="fas fa-qrcode text-sm"></i>
+            </div>
+            <div>
+              <h4 class="font-medium text-dark group-hover:text-primary transition-colors duration-200">Générer QR</h4>
+              <p class="text-xs text-gray-500">Nouvelle table</p>
+            </div>
+          </div>
+        </a>
+        
+        <a href="#" class="group p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all duration-200">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+              <i class="fas fa-file-export text-sm"></i>
+            </div>
+            <div>
+              <h4 class="font-medium text-dark group-hover:text-primary transition-colors duration-200">Exporter données</h4>
+              <p class="text-xs text-gray-500">Rapport complet</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ordersChart = new Chart(
+  document.getElementById('ordersChart'),
+  {
+    type: 'line',
+    data: {
+      labels: {{ days|safe }},
+      datasets: [{
+        label: 'Commandes',
+        data: {{ orders_count|safe }},
+        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+        borderColor: '#16a34a',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointBackgroundColor: '#16a34a',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'white',
+          titleColor: '#0f172a',
+          bodyColor: '#1f2937',
+          borderColor: '#e5e7eb',
+          borderWidth: 1,
+          cornerRadius: 8
+        }
+      },
+      scales: { 
+        y: { 
+          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.05)' }
+        },
+        x: {
+          grid: { color: 'rgba(0, 0, 0, 0.05)' }
+        }
+      }
+    }
+  }
+);
+
+const typeChart = new Chart(
+  document.getElementById('typeChart'),
+  {
+    type: 'doughnut',
+    data: {
+      labels: {{ type_labels|safe }},
+      datasets: [{
+        data: {{ type_values|safe }},
+        backgroundColor: [
+          '#16a34a', // primary
+          '#f97316', // secondary
+          '#ef4444', // red-500
+          '#8b5cf6', // purple-500
+          '#3b82f6'  // blue-500
+        ],
+        borderWidth: 0,
+        spacing: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { 
+          position: 'bottom',
+          labels: {
+            padding: 20,
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        }
+      },
+      cutout: '65%'
+    }
+  }
+);
+</script>
+{% endblock %}
+{% comment %} {% extends "admin_user/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen p-8">
+
+  <div class="max-w-7xl mx-auto">
+
+    <h1 class="text-3xl font-bold mb-8 text-gray-900">
+      Dashboard – {{ restaurant.name }}
+    </h1>
+
+    <!-- KPI CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+
+      <div class="bg-white p-6 rounded-2xl shadow flex items-center gap-4">
+        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-green-100 text-green-600">
+          <i class="fas fa-receipt text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 font-medium">Commandes</p>
+          <h2 class="text-2xl font-bold text-gray-900">{{ total_orders }}</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow flex items-center gap-4">
+        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+          <i class="fas fa-calendar-day text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 font-medium">Aujourd’hui</p>
+          <h2 class="text-2xl font-bold text-gray-900">{{ today_orders }}</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow flex items-center gap-4">
+        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
+          <i class="fas fa-coins text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 font-medium">CA Total</p>
+          <h2 class="text-2xl font-bold text-gray-900">{{ total_revenue }} FCFA</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow flex items-center gap-4">
+        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-purple-600">
+          <i class="fas fa-utensils text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 font-medium">Menus actifs</p>
+          <h2 class="text-2xl font-bold text-gray-900">{{ active_menu_items }}</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow flex items-center gap-4">
+        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 text-red-600">
+          <i class="fas fa-chair text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 font-medium">Tables actives</p>
+          <h2 class="text-2xl font-bold text-gray-900">{{ active_tables }}</h2>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      <div class="bg-white p-6 rounded-2xl shadow">
+        <h3 class="font-semibold mb-4 text-gray-800 flex items-center gap-2">
+          <i class="fas fa-chart-line text-green-500"></i>
+          Commandes (7 jours)
+        </h3>
+        <canvas id="ordersChart"></canvas>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow">
+        <h3 class="font-semibold mb-4 text-gray-800 flex items-center gap-2">
+          <i class="fas fa-pizza-slice text-yellow-500"></i>
+          Types de commandes
+        </h3>
+        <canvas id="typeChart"></canvas>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ordersChart = new Chart(
+  document.getElementById('ordersChart'),
+  {
+    type: 'line',
+    data: {
+      labels: {{ days|safe }},
+      datasets: [{
+        label: 'Commandes',
+        data: {{ orders_count|safe }},
+        backgroundColor: 'rgba(34,197,94,0.2)',
+        borderColor: 'rgba(34,197,94,1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 5
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  }
+);
+
+const typeChart = new Chart(
+  document.getElementById('typeChart'),
+  {
+    type: 'doughnut',
+    data: {
+      labels: {{ type_labels|safe }},
+      datasets: [{
+        data: {{ type_values|safe }},
+        backgroundColor: ['#34D399','#FBBF24','#F87171']
+      }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  }
+);
+</script>
+{% endblock %} {% endcomment %}

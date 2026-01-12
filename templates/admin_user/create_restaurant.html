@@ -1,0 +1,461 @@
+{% extends "admin_user/base.html" %}
+{% comment %} {% extends "admin_user/base.html" %}
+{% block title %}Créer un restaurant – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-4 md:p-6">
+
+  <!-- En-tête -->
+  <div class="mb-8">
+    <div class="mb-4">
+      <h1 class="text-xl font-semibold text-gray-900">
+        Créer un restaurant
+      </h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        Configurez votre restaurant pour commencer à vendre.
+      </p>
+    </div>
+  </div>
+
+  <!-- Carte -->
+  <div class="bg-white rounded-lg border border-gray-100 p-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Erreurs globales -->
+      {% if form.non_field_errors %}
+        <div class="bg-red-50 text-red-600 p-4 rounded-lg text-sm border border-red-200">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <!-- Nom -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Nom du restaurant
+        </label>
+        <input
+          type="text"
+          name="name"
+          value="{{ form.name.value|default:'' }}"
+          class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                 placeholder:text-gray-400"
+          placeholder="Ex : Le Jardin Gourmand"
+        >
+        {% if form.name.errors %}
+          <p class="text-xs text-red-500 mt-1">{{ form.name.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Description
+        </label>
+        <textarea
+          name="description"
+          rows="3"
+          class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                 placeholder:text-gray-400"
+          placeholder="Décrivez brièvement votre restaurant"
+        >{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}
+          <p class="text-xs text-red-500 mt-1">{{ form.description.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Adresse -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Adresse
+        </label>
+        <input
+          type="text"
+          name="address"
+          value="{{ form.address.value|default:'' }}"
+          class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                 placeholder:text-gray-400"
+          placeholder="Cotonou, Akpakpa…"
+        >
+        {% if form.address.errors %}
+          <p class="text-xs text-red-500 mt-1">{{ form.address.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Téléphone / Email -->
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Téléphone
+          </label>
+          <input
+            type="text"
+            name="phone"
+            value="{{ form.phone.value|default:'' }}"
+            class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                   focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                   placeholder:text-gray-400"
+            placeholder="+229 XX XX XX XX"
+          >
+          {% if form.phone.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ form.phone.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            value="{{ form.email.value|default:'' }}"
+            class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                   focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary
+                   placeholder:text-gray-400"
+            placeholder="contact@restaurant.com"
+          >
+          {% if form.email.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ form.email.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Logo
+          </label>
+          <div class="mt-1">
+            <label for="logo-upload" class="cursor-pointer">
+              <div class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-lg hover:border-primary/50 transition-colors duration-150">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                  <i class="fas fa-image text-gray-300 text-xl mb-2"></i>
+                  <p class="text-xs text-gray-500">Logo du restaurant</p>
+                  <p class="text-xs text-gray-400 mt-1">PNG, JPG, WEBP jusqu'à 5MB</p>
+                </div>
+                <input id="logo-upload" type="file" name="logo" accept="image/png,image/jpeg,image/webp"
+                       class="hidden">
+              </div>
+            </label>
+          </div>
+          {% if form.logo.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ form.logo.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Image de couverture
+          </label>
+          <div class="mt-1">
+            <label for="cover-upload" class="cursor-pointer">
+              <div class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-lg hover:border-primary/50 transition-colors duration-150">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                  <i class="fas fa-landscape text-gray-300 text-xl mb-2"></i>
+                  <p class="text-xs text-gray-500">Image de couverture</p>
+                  <p class="text-xs text-gray-400 mt-1">PNG, JPG, WEBP jusqu'à 5MB</p>
+                </div>
+                <input id="cover-upload" type="file" name="cover_image" accept="image/png,image/jpeg,image/webp"
+                       class="hidden">
+              </div>
+            </label>
+          </div>
+          {% if form.cover_image.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ form.cover_image.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Couleurs -->
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Couleur principale
+          </label>
+          <div class="flex items-center gap-3">
+            <input
+              type="color"
+              name="primary_color"
+              value="{{ form.primary_color.value|default:'#16a34a' }}"
+              class="h-10 w-10 rounded-lg border border-gray-200 cursor-pointer"
+            >
+            <div class="flex-1 px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-500">
+              {{ form.primary_color.value|default:'#16a34a' }}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Couleur secondaire
+          </label>
+          <div class="flex items-center gap-3">
+            <input
+              type="color"
+              name="secondary_color"
+              value="{{ form.secondary_color.value|default:'#f97316' }}"
+              class="h-10 w-10 rounded-lg border border-gray-200 cursor-pointer"
+            >
+            <div class="flex-1 px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-500">
+              {{ form.secondary_color.value|default:'#f97316' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+        <a href="#"
+           class="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+          Annuler
+        </a>
+        <button
+          type="submit"
+          class="px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors duration-150">
+          Créer le restaurant
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+// Aperçu des images
+function setupImagePreview(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  
+  input.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const label = input.parentElement;
+        label.innerHTML = `
+          <div class="w-full h-32 rounded-lg overflow-hidden border border-gray-200">
+            <img src="${e.target.result}" alt="Aperçu" class="w-full h-full object-cover">
+          </div>
+          <div class="mt-2 text-xs text-gray-500 text-center">
+            Cliquez pour changer
+          </div>
+          <input id="${inputId}" type="file" name="${input.name}" accept="image/png,image/jpeg,image/webp"
+                 class="hidden">
+        `;
+        // Réattacher l'événement
+        setupImagePreview(inputId);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+// Initialiser les aperçus d'image
+setupImagePreview('logo-upload');
+setupImagePreview('cover-upload');
+
+// Mettre à jour l'affichage de la valeur des couleurs
+document.querySelectorAll('input[type="color"]').forEach(input => {
+  const display = input.nextElementSibling;
+  
+  input.addEventListener('input', function() {
+    display.textContent = this.value;
+  });
+});
+</script>
+{% endblock %} {% endcomment %}
+
+
+{% block title %}Créer un restaurant – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+
+  <!-- Titre -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-semibold text-dark">
+      Créer un restaurant
+    </h1>
+    <p class="text-gray-500 mt-1">
+      Configurez votre restaurant pour commencer à vendre.
+    </p>
+  </div>
+
+  <!-- Carte -->
+  <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Erreurs globales -->
+      {% if form.non_field_errors %}
+        <div class="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <!-- Nom -->
+      <div>
+        <label class="block text-sm font-medium mb-2">
+          Nom du restaurant
+        </label>
+        <input
+          type="text"
+          name="name"
+          value="{{ form.name.value|default:'' }}"
+          class="w-full rounded-xl border border-gray-300 px-4 py-2
+                 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          placeholder="Ex : Le Jardin Gourmand"
+        >
+        {{ form.name.errors }}
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium mb-2">
+          Description
+        </label>
+        <textarea
+          name="description"
+          rows="3"
+          class="w-full rounded-xl border border-gray-300 px-4 py-2
+                 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          placeholder="Décrivez brièvement votre restaurant"
+        >{{ form.description.value|default:'' }}</textarea>
+        {{ form.description.errors }}
+      </div>
+
+      <!-- Adresse -->
+      <div>
+        <label class="block text-sm font-medium mb-2">
+          Adresse
+        </label>
+        <input
+          type="text"
+          name="address"
+          value="{{ form.address.value|default:'' }}"
+          class="w-full rounded-xl border border-gray-300 px-4 py-2
+                 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          placeholder="Cotonou, Akpakpa…"
+        >
+        {{ form.address.errors }}
+      </div>
+
+      <!-- Téléphone / Email -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium mb-2">
+            Téléphone
+          </label>
+          <input
+            type="text"
+            name="phone"
+            value="{{ form.phone.value|default:'' }}"
+            class="w-full rounded-xl border border-gray-300 px-4 py-2
+                   focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            placeholder="+229 XX XX XX XX"
+          >
+          {{ form.phone.errors }}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            value="{{ form.email.value|default:'' }}"
+            class="w-full rounded-xl border border-gray-300 px-4 py-2
+                   focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            placeholder="contact@restaurant.com"
+          >
+          {{ form.email.errors }}
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium mb-2">
+            Logo
+          </label>
+          <input
+            type="file"
+            name="logo"
+            accept="image/png,image/jpeg,image/webp"
+            class="w-full text-sm file:mr-4 file:py-2 file:px-4
+                   file:rounded-xl file:border-0
+                   file:bg-primary file:text-white
+                   hover:file:bg-green-700"
+          >
+          {{ form.logo.errors }}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2">
+            Image de couverture
+          </label>
+          <input
+            type="file"
+            name="cover_image"
+            accept="image/png,image/jpeg,image/webp"
+            class="w-full text-sm file:mr-4 file:py-2 file:px-4
+                   file:rounded-xl file:border-0
+                   file:bg-primary file:text-white
+                   hover:file:bg-green-700"
+          >
+          {{ form.cover_image.errors }}
+        </div>
+      </div>
+
+      <!-- Couleurs -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium mb-2">
+            Couleur principale
+          </label>
+          <input
+            type="color"
+            name="primary_color"
+            value="{{ form.primary_color.value|default:'#16a34a' }}"
+            class="h-11 w-full rounded-xl border border-gray-300"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2">
+            Couleur secondaire
+          </label>
+          <input
+            type="color"
+            name="secondary_color"
+            value="{{ form.secondary_color.value|default:'#f97316' }}"
+            class="h-11 w-full rounded-xl border border-gray-300"
+          >
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-4 pt-6">
+        <a href="#"
+           class="px-6 py-2 rounded-xl border text-gray-600 hover:bg-gray-50">
+          Annuler
+        </a>
+
+        <button
+          type="submit"
+          class="px-6 py-2 rounded-xl bg-primary text-white font-medium
+                 hover:bg-green-700 transition">
+          Créer le restaurant
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %} 

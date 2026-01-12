@@ -1,0 +1,144 @@
+{% comment %} <nav class="bg-white shadow-sm py-4 sticky top-0 z-50">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+        <!-- Logo et Nom du Restaurant -->
+        <div class="flex items-center space-x-3">
+            {% if restaurant.logo %}
+                <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }} Logo" class="h-10 w-auto object-contain">
+            {% endif %}
+            <a href="#" class="text-2xl font-bold text-gray-800 hover:text-primary-color transition-colors duration-300">
+                {{ restaurant.name }}
+            </a>
+        </div>
+
+        <!-- Menu Desktop -->
+        <div class="hidden md:flex items-center space-x-6">
+            <a href="#" class="text-gray-600 hover:text-primary-color font-medium transition-colors duration-300">Menu</a>
+            <!-- Autres liens si nécessaire, ex: À propos, Contact -->
+            
+            <!-- Icône Panier -->
+            <button onclick="openModal('cart-modal')" class="relative text-gray-600 hover:text-primary-color transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13-3.4 5M4 19h16" />
+                </svg>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-secondary-color text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {{ cart_count }}
+                </span>
+            </button>
+            
+            <!-- Icône Recherche -->
+            <button onclick="document.getElementById('search-input-desktop').focus();" class="text-gray-600 hover:text-primary-color transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Menu Mobile Button -->
+        <div class="md:hidden flex items-center space-x-4">
+            <!-- Icône Panier pour mobile -->
+            <button onclick="openModal('cart-modal')" class="relative text-gray-600 hover:text-primary-color transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13-3.4 5M4 19h16" />
+                </svg>
+                <span id="cart-count-mobile" class="absolute -top-2 -right-2 bg-secondary-color text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {{ cart_count }}
+                </span>
+            </button>
+            <button id="menu-button" class="text-gray-600 hover:text-primary-color focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Menu Mobile (Hidden by default) -->
+    <div id="mobile-menu" class="hidden md:hidden fixed inset-0 bg-white z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="flex justify-end p-4 border-b">
+            <button id="close-mobile-menu" class="text-gray-600 hover:text-primary-color focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="flex flex-col items-center py-8 space-y-6">
+            <a href="#" class="text-2xl text-gray-800 hover:text-primary-color font-medium transition-colors duration-300">Menu</a>
+            <!-- Autres liens mobiles -->
+            <div class="w-full px-4 mt-6">
+                <div class="relative">
+                    <input type="text" id="search-input-mobile" placeholder="Rechercher un plat..." class="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-color text-lg">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav> {% endcomment %}
+<!-- navbar.html -->
+<nav class="sticky top-0 z-40 bg-white shadow-md">
+    <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+            <!-- Logo et nom du restaurant -->
+            <div class="flex items-center space-x-4">
+                {% if restaurant.logo %}
+                <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="h-12 w-12 object-cover rounded-full">
+                {% endif %}
+                <div>
+                    <h1 class="text-2xl font-bold primary-text">{{ restaurant.name }}</h1>
+                    <p class="text-sm text-gray-600">{{ table.name }}</p>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex items-center space-x-6">
+                <!-- Search -->
+                <div class="hidden md:block">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchQuery"
+                            placeholder="Rechercher un plat..." 
+                            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                        >
+                        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Panier -->
+                <button 
+                    @click="showCart = true"
+                    class="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                    <svg class="h-6 w-6 primary-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span 
+                        x-show="cartCount > 0"
+                        x-text="cartCount"
+                        class="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                    ></span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Search mobile -->
+        <div class="mt-4 md:hidden">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    x-model="searchQuery"
+                    placeholder="Rechercher un plat..." 
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                >
+                <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+</nav>

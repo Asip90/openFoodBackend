@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{% block title %}OpenFood – Dashboard{% endblock %}</title>
+
+  <!-- Google Font : Montserrat -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#16a34a',   /* vert OpenFood */
+            secondary: '#f97316', /* orange appétit */
+            dark: '#0f172a',
+            text: '#1f2937',
+            background: '#f8fafc',
+            gray: {
+              50: '#f9fafb',
+              100: '#f3f4f6',
+            },
+            yellow: {
+              100: '#fef3c7',
+              600: '#d97706'
+            },
+            purple: {
+              100: '#e9d5ff',
+              600: '#9333ea'
+            },
+            red: {
+              100: '#fee2e2',
+              500: '#ef4444'
+            },
+            blue: {
+              500: '#3b82f6'
+            },
+            success: '#10b981',    /* vert succès */
+            warning: '#f59e0b',    /* orange attention */
+            error: '#ef4444',      /* rouge erreur */
+            info: '#3b82f6'        /* bleu information */
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+          },
+          
+          borderRadius: {
+            xl: '1rem',
+            '2xl': '1.25rem'
+          }
+        }
+      }
+    }
+  </script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-white font-montserrat text-text min-h-screen flex">
+
+  <!-- SIDEBAR -->
+  {% include "admin_user/sidebar.html" %}
+
+  <!-- MAIN -->
+  <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+
+    <!-- HEADER -->
+    {% include "admin_user/header.html" %}
+
+    <!-- CONTENT -->
+    <main class="flex-1 p-6 md:p-10">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-sm text-gray-400 py-4">
+      © {{ year|default:"2025" }} OpenFood — Tous droits réservés.
+    </footer>
+
+  </div>
+
+  <!-- FontAwesome -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,328 @@
+{% extends "admin_user/base.html" %}
+{% load static %}
+{% block title %}Menus – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 md:p-6">
+
+  <!-- Header page -->
+  <div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900 mb-1">
+          Gestion des menus
+        </h1>
+        <p class="text-sm text-gray-500">
+          Restaurant : {{ restaurant.name }}
+        </p>
+      </div>
+
+      <a href="{% url 'menu_create' %}"
+         class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        <i class="fas fa-plus text-xs"></i>
+        Ajouter un plat
+      </a>
+    </div>
+  </div>
+
+  {% if categories %}
+    {% for category in categories %}
+      <div class="mb-8">
+        <!-- Catégorie -->
+        <div class="mb-4">
+          <h2 class="text-lg font-medium text-gray-900 mb-1">
+            {{ category.name }}
+          </h2>
+          <div class="w-8 h-0.5 bg-primary"></div>
+        </div>
+
+        {% if category.items.all %}
+          <div class="bg-white rounded-lg border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr class="border-b border-gray-200">
+                    <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Nom</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Image</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Prix</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-700 text-xs uppercase tracking-wider">Disponibilité</th>
+                    <th class="px-4 py-3 text-right font-medium text-gray-700 text-xs uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-100">
+                  {% for item in category.items.all %}
+                  <tr class="hover:bg-gray-50/50 transition-colors duration-150">
+                    <!-- Nom -->
+                    <td class="px-4 py-3">
+                      <div class="font-medium text-gray-900">{{ item.name }}</div>
+                      {% if item.description %}
+                        <div class="text-xs text-gray-400 mt-0.5 line-clamp-1">{{ item.description }}</div>
+                      {% endif %}
+                    </td>
+
+                    <!-- Image -->
+                    <td class="px-4 py-3">
+                      {% if item.image %}
+                        <div class="w-10 h-10 rounded overflow-hidden border border-gray-200">
+                          <img src="{{ item.image.url }}" alt="{{ item.name }}" 
+                               class="w-full h-full object-cover">
+                        </div>
+                      {% else %}
+                        <div class="w-10 h-10 rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
+                          <i class="fas fa-image text-gray-300 text-sm"></i>
+                        </div>
+                      {% endif %}
+                    </td>
+
+                    <!-- Prix -->
+                    <td class="px-4 py-3">
+                      <div class="font-medium text-gray-900">{{ item.price }} FCFA</div>
+                    </td>
+
+                    <!-- Disponibilité -->
+                    <td class="px-4 py-3">
+                      {% if item.is_available %}
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+                          <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                          Disponible
+                        </div>
+                      {% else %}
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                          <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                          Indisponible
+                        </div>
+                      {% endif %}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-4 py-3">
+                      <div class="flex items-center justify-end gap-2">
+                        <!-- Toggle disponibilité -->
+                        <button type="button"
+                                onclick="toggleAvailability({{ item.id }}, '{{ item.name|escapejs }}', {{ item.is_available|yesno:"true,false" }})"
+                                class="p-1.5 text-gray-400 hover:text-green-600 transition-colors duration-150"
+                                title="{% if item.is_available %}Rendre indisponible{% else %}Rendre disponible{% endif %}">
+                          <i class="fas fa-power-off text-sm"></i>
+                        </button>
+                        
+                        <!-- Modifier -->
+                        <a href="{% url 'menu_update' item.id %}"
+                           class="p-1.5 text-gray-400 hover:text-primary transition-colors duration-150"
+                           title="Modifier">
+                          <i class="fas fa-edit text-sm"></i>
+                        </a>
+                        
+                        <!-- Supprimer -->
+                        <button type="button"
+                                onclick="showDeleteModal('{{ item.name|escapejs }}', '{% url 'menu_delete' item.id %}')"
+                                class="p-1.5 text-gray-400 hover:text-red-500 transition-colors duration-150"
+                                title="Supprimer">
+                          <i class="fas fa-trash text-sm"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% else %}
+          <div class="bg-white rounded-lg border border-gray-100 p-6 text-center">
+            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <i class="fas fa-utensils text-gray-400"></i>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Aucun plat dans cette catégorie</p>
+            <a href="{% url 'menu_create' %}" 
+               class="text-sm text-primary hover:text-primary/80 font-medium">
+              Ajouter un plat
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="bg-white rounded-lg border border-gray-100 p-8 text-center">
+      <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+        <i class="fas fa-utensils text-gray-400 text-xl"></i>
+      </div>
+      <h3 class="text-sm font-medium text-gray-900 mb-2">Aucune catégorie de menu</h3>
+      <p class="text-sm text-gray-500 mb-6">Commencez par ajouter votre premier plat</p>
+      <a href="{% url 'menu_create' %}"
+         class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        <i class="fas fa-plus text-xs"></i>
+        Créer votre premier plat
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 hidden">
+  <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md transform transition-all duration-200 scale-95 opacity-0">
+    <div class="mb-6">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center">
+        <i class="fas fa-exclamation-triangle text-red-500"></i>
+      </div>
+      <h3 class="text-center text-sm font-medium text-gray-900 mb-1">Supprimer le plat</h3>
+      <p id="deleteItemName" class="text-center text-sm text-gray-500 mb-4"></p>
+      <p class="text-center text-xs text-gray-400">
+        Cette action est irréversible.
+      </p>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button id="cancelDeleteBtn"
+              class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors duration-150">
+        Annuler
+      </button>
+      <a id="confirmDeleteBtn"
+         href="#"
+         class="flex-1 px-4 py-2.5 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors duration-150 text-center">
+        Supprimer
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de disponibilité -->
+<div id="availabilityModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 hidden">
+  <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md transform transition-all duration-200 scale-95 opacity-0">
+    <div class="mb-6">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+        <i class="fas fa-exchange-alt text-blue-500"></i>
+      </div>
+      <h3 class="text-center text-sm font-medium text-gray-900 mb-1">Changer la disponibilité</h3>
+      <p id="toggleItemName" class="text-center text-sm text-gray-500 mb-2"></p>
+      <p id="toggleStatus" class="text-center text-xs text-gray-400"></p>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button id="cancelToggleBtn"
+              class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors duration-150">
+        Annuler
+      </button>
+      <button id="confirmToggleBtn"
+              class="flex-1 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        Confirmer
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Variables pour les modales
+let currentDeleteUrl = '';
+let currentItemId = null;
+
+// Fonction pour ouvrir une modal avec animation
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    modal.querySelector('div').classList.remove('scale-95', 'opacity-0');
+  }, 10);
+}
+
+// Fonction pour fermer une modal avec animation
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  modal.querySelector('div').classList.add('scale-95', 'opacity-0');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 200);
+}
+
+// Modal de suppression
+function showDeleteModal(itemName, deleteUrl) {
+  document.getElementById('deleteItemName').textContent = itemName;
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  confirmBtn.href = deleteUrl;
+  openModal('deleteModal');
+}
+
+// Modal de changement de disponibilité
+function toggleAvailability(itemId, itemName, isAvailable) {
+  currentItemId = itemId;
+  document.getElementById('toggleItemName').textContent = itemName;
+  
+  const statusText = isAvailable 
+    ? 'Rendre ce plat indisponible ?' 
+    : 'Rendre ce plat disponible ?';
+  const statusChange = isAvailable
+    ? 'Disponible → Indisponible'
+    : 'Indisponible → Disponible';
+  
+  document.getElementById('toggleStatus').textContent = statusChange;
+  openModal('availabilityModal');
+}
+
+// Événements pour la modal de suppression
+document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+  closeModal('deleteModal');
+});
+
+// Événements pour la modal de disponibilité
+document.getElementById('cancelToggleBtn').addEventListener('click', () => {
+  closeModal('availabilityModal');
+});
+
+document.getElementById('confirmToggleBtn').addEventListener('click', () => {
+  if (currentItemId) {
+    // Créer un formulaire pour soumettre la requête POST
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/menus/${currentItemId}/change-availability/`;
+    form.style.display = 'none';
+    
+    // Ajouter le token CSRF
+    const csrfToken = getCookie('csrftoken');
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    // Soumettre le formulaire
+    document.body.appendChild(form);
+    form.submit();
+  }
+});
+
+// Fonction utilitaire pour récupérer le cookie CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Fermer les modales en cliquant en dehors
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'deleteModal') {
+    closeModal('deleteModal');
+  }
+  if (e.target.id === 'availabilityModal') {
+    closeModal('availabilityModal');
+  }
+});
+
+// Fermer les modales avec la touche Échap
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal('deleteModal');
+    closeModal('availabilityModal');
+  }
+});
+</script>
+{% endblock %}

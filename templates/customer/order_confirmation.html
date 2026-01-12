@@ -1,0 +1,141 @@
+{% comment %}
+client/order_confirmation.html
+Template de confirmation après commande
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commande confirmée - {{ restaurant.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-blue-500 text-white p-6 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                <i class="fas fa-check text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold">Commande confirmée !</h1>
+            <p class="text-blue-100 mt-2">Votre commande a été enregistrée avec succès</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Order Info -->
+            <div class="text-center mb-6">
+                <p class="text-gray-600 mb-2">Numéro de commande</p>
+                <h2 class="text-3xl font-bold text-gray-900">#{{ order.id }}</h2>
+                <p class="text-gray-500 mt-2">
+                    <i class="fas fa-clock mr-2"></i>
+                    {{ order.created_at|date:"H:i" }} • {{ order.created_at|date:"d/m/Y" }}
+                </p>
+            </div>
+            
+            <!-- Status -->
+            <div class="mb-6">
+                <div class="flex items-center justify-center mb-2">
+                    <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                    <span class="font-semibold text-yellow-600">En attente de préparation</span>
+                </div>
+                <p class="text-center text-gray-600 text-sm">
+                    Votre commande a été transmise au restaurant
+                </p>
+            </div>
+            
+            <!-- Order Details -->
+            <div class="border-t border-b border-gray-200 py-4 mb-6">
+                <h3 class="font-bold text-gray-900 mb-3">Détails de la commande</h3>
+                
+                <div class="space-y-3">
+                    {% for item in order.items.all %}
+                    <div class="flex justify-between">
+                        <div>
+                            <span class="font-medium">{{ item.quantity }}× {{ item.menu_item.name }}</span>
+                        </div>
+                        <span class="font-semibold">{{ item.get_total }} FCFA</span>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="border-t border-gray-200 pt-3 mt-3">
+                        <div class="flex justify-between font-bold text-lg">
+                            <span>Total</span>
+                            <span class="text-blue-600">{{ order.total_amount }} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Customer Info -->
+            <div class="mb-6">
+                <h3 class="font-bold text-gray-900 mb-3">Informations</h3>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div class="flex items-center">
+                        <i class="fas fa-user text-gray-400 mr-3 w-5"></i>
+                        <span class="text-gray-700">{{ order.customer_name }}</span>
+                    </div>
+                    
+                    {% if order.table %}
+                    <div class="flex items-center">
+                        <i class="fas fa-chair text-gray-400 mr-3 w-5"></i>
+                        <span class="text-gray-700">Table {{ order.table.number }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.customer_phone %}
+                    <div class="flex items-center">
+                        <i class="fas fa-phone text-gray-400 mr-3 w-5"></i>
+                        <span class="text-gray-700">{{ order.customer_phone }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.notes %}
+                    <div class="flex items-start">
+                        <i class="fas fa-sticky-note text-gray-400 mr-3 mt-1 w-5"></i>
+                        <span class="text-gray-700">{{ order.notes }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Restaurant Info -->
+            <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                <h4 class="font-bold text-gray-900 mb-2">{{ restaurant.name }}</h4>
+                
+                {% if restaurant.phone %}
+                <p class="text-sm text-gray-600 mb-1">
+                    <i class="fas fa-phone mr-2"></i>{{ restaurant.phone }}
+                </p>
+                {% endif %}
+                
+                {% if restaurant.address %}
+                <p class="text-sm text-gray-600">
+                    <i class="fas fa-map-marker-alt mr-2"></i>{{ restaurant.address }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <!-- Actions -->
+            <div class="space-y-3">
+                <a href="{% url 'client_menu' restaurant.slug order.table.id %}"
+                   class="block w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition-colors duration-200 text-center">
+                    <i class="fas fa-utensils mr-2"></i>Nouvelle commande
+                </a>
+                
+                <button onclick="window.print()"
+                        class="w-full py-3 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                    <i class="fas fa-print mr-2"></i>Imprimer le reçu
+                </button>
+            </div>
+            
+            <!-- Message -->
+            <p class="text-center text-gray-500 text-sm mt-6">
+                <i class="fas fa-info-circle mr-1"></i>
+                Vous serez notifié lorsque votre commande sera prête
+            </p>
+        </div>
+    </div>
+</body>
+</html>

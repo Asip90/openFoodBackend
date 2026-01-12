@@ -1,0 +1,1216 @@
+{% extends "admin_user/base.html" %}
+{% block title %}Modifier la commande – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-4 md:p-6">
+
+  <!-- En-tête -->
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <a href="{% url 'orders_list' %}" 
+         class="text-gray-400 hover:text-gray-600 transition-colors duration-150">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900">
+          Modifier la commande #{{ order.id }}
+        </h1>
+        <p class="text-sm text-gray-500 mt-0.5">
+          Restaurant : {{ restaurant.name }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+      <div class="flex items-center gap-2">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Formulaire principal -->
+  <form method="post" id="order-form" class="space-y-8">
+    {% csrf_token %}
+    
+    <!-- Management form du FormSet -->
+    {{ formset.management_form }}
+
+    <!-- =================== INFOS COMMANDE =================== -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-6 pb-4 border-b border-gray-100">
+        Informations de la commande
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Type de commande -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Type de commande
+          </label>
+          {{ order_form.order_type }}
+        </div>
+
+        <!-- Table -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Table
+          </label>
+          {{ order_form.table }}
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <!-- Nom du client -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Nom du client
+          </label>
+          {{ order_form.customer_name }}
+        </div>
+
+        <!-- Téléphone -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Téléphone
+          </label>
+          {{ order_form.customer_phone }}
+        </div>
+      </div>
+
+      <!-- Statut -->
+      <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Statut de la commande
+        </label>
+        {{ order_form.status }}
+      </div>
+
+      <!-- Notes -->
+      <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Notes (optionnel)
+        </label>
+        {{ order_form.notes }}
+      </div>
+    </div>
+
+    <!-- =================== MENU =================== -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-gray-900">
+          Ajouter des articles
+        </h2>
+        <button type="button"
+                onclick="showAllItems()"
+                class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-150">
+          Afficher tout
+        </button>
+      </div>
+
+      {% if categories %}
+        <div class="space-y-6">
+          {% for category in categories %}
+            {% if category.items.all %}
+            <div>
+              <!-- Titre catégorie -->
+              <div class="mb-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-1">
+                  {{ category.name }}
+                </h3>
+                <div class="w-8 h-0.5 bg-primary"></div>
+              </div>
+
+              <!-- Articles de la catégorie -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for item in category.items.all %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-primary/50 transition-colors duration-150">
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1">
+                      <h4 class="font-medium text-gray-900">{{ item.name }}</h4>
+                      {% if item.description %}
+                        <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ item.description }}</p>
+                      {% endif %}
+                    </div>
+                    {% if item.image %}
+                      <div class="w-12 h-12 ml-3 rounded overflow-hidden border border-gray-200 flex-shrink-0">
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}" 
+                             class="w-full h-full object-cover">
+                      </div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-primary">
+                      {% if item.discount_price %}
+                        <div>
+                          <span class="text-gray-400 line-through text-sm">{{ item.price }} FCFA</span>
+                          <div>{{ item.discount_price }} FCFA</div>
+                        </div>
+                      {% else %}
+                        {{ item.price }} FCFA
+                      {% endif %}
+                    </div>
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 text-xs font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-150"
+                      onclick="addNewItem('{{ item.id }}', '{{ item.name|escapejs }}', {{ item.discount_price|default:item.price }}, '{% if item.image %}{{ item.image.url }}{% endif %}')">
+                      Ajouter
+                    </button>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-8 text-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <i class="fas fa-utensils text-gray-400"></i>
+          </div>
+          <p class="text-sm text-gray-500">Aucune catégorie avec plats disponibles.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- =================== ARTICLES DE LA COMMANDE =================== -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-gray-900">
+          Articles de la commande
+        </h2>
+        <div class="text-lg font-semibold text-primary" id="total-price">
+          {{ order.total_amount }} FCFA
+        </div>
+      </div>
+
+      <!-- Articles existants -->
+      <div id="order-items-container" class="space-y-3">
+        {% for item in existing_items %}
+        <div class="order-item flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-gray-50" data-item-id="{{ item.id }}">
+          {% if item.image_url %}
+          <div class="w-10 h-10 rounded overflow-hidden border border-gray-200 flex-shrink-0">
+            <img src="{{ item.image_url }}" alt="{{ item.name }}" class="w-full h-full object-cover">
+          </div>
+          {% endif %}
+          <div class="flex-1">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <h4 class="font-medium text-gray-900">{{ item.name }}</h4>
+                <div class="text-sm text-gray-500">{{ item.price }} FCFA/unité</div>
+              </div>
+              <button type="button" 
+                      onclick="removeItem(this)"
+                      class="p-2 text-gray-400 hover:text-red-500 transition-colors duration-150">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <button type="button" 
+                        onclick="updateQuantity(this, -1)"
+                        class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+                  <i class="fas fa-minus text-xs"></i>
+                </button>
+                <input type="number" 
+                       name="items-{{ forloop.counter0 }}-quantity"
+                       value="{{ item.quantity }}"
+                       min="1"
+                       class="w-16 text-center border border-gray-300 rounded py-1 px-2"
+                       onchange="updateItemTotal(this)">
+                <button type="button" 
+                        onclick="updateQuantity(this, 1)"
+                        class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+                  <i class="fas fa-plus text-xs"></i>
+                </button>
+              </div>
+              <div class="font-medium text-primary item-subtotal">
+                {{ item.subtotal }} FCFA
+              </div>
+            </div>
+            
+            <!-- Champs cachés pour le formset -->
+            <input type="hidden" name="items-{{ forloop.counter0 }}-id" value="{{ item.id }}">
+            <input type="hidden" name="items-{{ forloop.counter0 }}-menu_item" value="{{ item.menu_item_id }}">
+          </div>
+        </div>
+        {% empty %}
+        <div id="empty-state" class="p-8 text-center border-2 border-dashed border-gray-200 rounded-lg">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <i class="fas fa-shopping-bag text-gray-400"></i>
+          </div>
+          <p class="text-sm text-gray-500">Aucun article ajouté</p>
+          <p class="text-xs text-gray-400 mt-1">Ajoutez des articles depuis le menu ci-dessus</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Template pour les nouveaux articles -->
+      <template id="new-item-template">
+        <div class="order-item new-item flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+          <div class="item-image w-10 h-10 rounded overflow-hidden border border-gray-200 flex-shrink-0"></div>
+          <div class="flex-1">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <h4 class="item-name font-medium text-gray-900"></h4>
+                <div class="item-price text-sm text-gray-500"></div>
+              </div>
+              <button type="button" 
+                      onclick="removeItem(this)"
+                      class="p-2 text-gray-400 hover:text-red-500 transition-colors duration-150">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <button type="button" 
+                        onclick="updateQuantity(this, -1)"
+                        class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+                  <i class="fas fa-minus text-xs"></i>
+                </button>
+                <input type="number" 
+                       name="new-items-{index}-quantity"
+                       value="1"
+                       min="1"
+                       class="w-16 text-center border border-gray-300 rounded py-1 px-2"
+                       onchange="updateItemTotal(this)">
+                <button type="button" 
+                        onclick="updateQuantity(this, 1)"
+                        class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+                  <i class="fas fa-plus text-xs"></i>
+                </button>
+              </div>
+              <div class="font-medium text-primary item-subtotal"></div>
+            </div>
+            
+            <!-- Champs cachés pour le formset -->
+            <input type="hidden" name="new-items-{index}-menu_item" class="item-menu-item">
+            <input type="hidden" name="new-items-{index}-DELETE" value="False">
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- =================== ACTIONS =================== -->
+    <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+      <a href="{% url 'orders_list' %}"
+         class="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+        Annuler
+      </a>
+      <button type="submit"
+              class="px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        Mettre à jour
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div id="deleteModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeDeleteModal()"></div>
+    
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+            <i class="fas fa-exclamation-triangle text-red-600"></i>
+          </div>
+          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              Supprimer la commande
+            </h3>
+            <div class="mt-2">
+              <p class="text-sm text-gray-500">
+                Êtes-vous sûr de vouloir supprimer la commande #{{ order.id }} ? Cette action est irréversible.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <form method="post" action="{% url 'delete_order' order.id %}" class="inline">
+          {% csrf_token %}
+          <button type="submit"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+            Supprimer
+          </button>
+        </form>
+        <button type="button"
+                onclick="closeDeleteModal()"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let newItemCounter = 0;
+
+// Initialiser les styles des champs de formulaire
+document.addEventListener('DOMContentLoaded', function() {
+  // Style pour les select
+  const selects = document.querySelectorAll('select');
+  selects.forEach(select => {
+    select.className = 'w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary';
+  });
+  
+  // Style pour les inputs
+  const inputs = document.querySelectorAll('input[type="text"], input[type="tel"]');
+  inputs.forEach(input => {
+    input.className = 'w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-gray-400';
+  });
+  
+  // Style pour les textareas
+  const textareas = document.querySelectorAll('textarea');
+  textareas.forEach(textarea => {
+    textarea.className = 'w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-gray-400';
+    textarea.rows = 3;
+  });
+  
+  // Mettre à jour le total initial
+  updateTotal();
+});
+
+// Fonction pour ajouter un nouvel article
+function addNewItem(menuItemId, name, price, imageUrl) {
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+  
+  const template = document.getElementById('new-item-template');
+  const clone = template.content.cloneNode(true);
+  const newItem = clone.querySelector('.new-item');
+  
+  // Générer un index unique
+  const index = newItemCounter++;
+  
+  // Remplir les données
+  newItem.querySelector('.item-name').textContent = name;
+  newItem.querySelector('.item-price').textContent = price + ' FCFA/unité';
+  newItem.querySelector('.item-subtotal').textContent = price + ' FCFA';
+  
+  // Ajouter l'image si disponible
+  if (imageUrl) {
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = name;
+    img.className = 'w-full h-full object-cover';
+    newItem.querySelector('.item-image').appendChild(img);
+  }
+  
+  // Mettre à jour les noms des champs avec l'index
+  const quantityInput = newItem.querySelector('input[type="number"]');
+  const menuItemInput = newItem.querySelector('.item-menu-item');
+  const deleteInput = newItem.querySelector('input[name$="-DELETE"]');
+  
+  quantityInput.name = `new-items-${index}-quantity`;
+  menuItemInput.name = `new-items-${index}-menu_item`;
+  deleteInput.name = `new-items-${index}-DELETE`;
+  
+  menuItemInput.value = menuItemId;
+  
+  // Ajouter l'article au conteneur
+  document.getElementById('order-items-container').appendChild(newItem);
+  
+  // Mettre à jour le management form
+  updateManagementForm();
+  
+  // Mettre à jour le total
+  updateTotal();
+  
+  // Retirer la classe new-item pour éviter les doublons
+  newItem.classList.remove('new-item');
+}
+
+// Fonction pour mettre à jour la quantité
+function updateQuantity(button, change) {
+  const container = button.closest('.order-item');
+  const quantityInput = container.querySelector('input[type="number"]');
+  let quantity = parseInt(quantityInput.value);
+  
+  quantity += change;
+  if (quantity < 1) quantity = 1;
+  
+  quantityInput.value = quantity;
+  updateItemTotal(quantityInput);
+}
+
+// Fonction pour mettre à jour le total d'un article
+function updateItemTotal(input) {
+  const container = input.closest('.order-item');
+  const priceText = container.querySelector('.item-price').textContent;
+  const price = parseFloat(priceText.replace(' FCFA/unité', ''));
+  const quantity = parseInt(input.value);
+  const subtotal = price * quantity;
+  
+  container.querySelector('.item-subtotal').textContent = subtotal + ' FCFA';
+  updateTotal();
+}
+
+// Fonction pour supprimer un article
+function removeItem(button) {
+  const container = button.closest('.order-item');
+  
+  // Si c'est un article existant, marquer pour suppression
+  if (container.dataset.itemId) {
+    // Créer un champ DELETE si nécessaire
+    let deleteInput = container.querySelector('input[name$="-DELETE"]');
+    if (!deleteInput) {
+      deleteInput = document.createElement('input');
+      deleteInput.type = 'hidden';
+      deleteInput.name = container.querySelector('input[name$="-id"]').name.replace('-id', '-DELETE');
+      deleteInput.value = 'True';
+      container.appendChild(deleteInput);
+    } else {
+      deleteInput.value = 'True';
+    }
+    
+    // Cacher l'article visuellement
+    container.style.display = 'none';
+  } else {
+    // C'est un nouvel article, le supprimer complètement
+    container.remove();
+  }
+  
+  // Vérifier s'il reste des articles visibles
+  const visibleItems = document.querySelectorAll('.order-item:not([style*="display: none"])');
+  if (visibleItems.length === 0) {
+    const container = document.getElementById('order-items-container');
+    container.innerHTML = `
+      <div id="empty-state" class="p-8 text-center border-2 border-dashed border-gray-200 rounded-lg">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+          <i class="fas fa-shopping-bag text-gray-400"></i>
+        </div>
+        <p class="text-sm text-gray-500">Aucun article ajouté</p>
+        <p class="text-xs text-gray-400 mt-1">Ajoutez des articles depuis le menu ci-dessus</p>
+      </div>
+    `;
+  }
+  
+  updateTotal();
+  updateManagementForm();
+}
+
+// Fonction pour mettre à jour le total général
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll('.order-item:not([style*="display: none"]) .item-subtotal').forEach(element => {
+    const subtotalText = element.textContent.replace(' FCFA', '');
+    total += parseFloat(subtotalText);
+  });
+  
+  document.getElementById('total-price').textContent = total + ' FCFA';
+}
+
+// Fonction pour mettre à jour le management form
+function updateManagementForm() {
+  // Compter les articles visibles
+  const visibleItems = document.querySelectorAll('.order-item:not([style*="display: none"])');
+  
+  // Mettre à jour TOTAL_FORMS dans le management form du formset existant
+  const totalFormsInput = document.querySelector('input[name="items-TOTAL_FORMS"]');
+  if (totalFormsInput) {
+    // Compter uniquement les articles existants (ceux avec data-item-id)
+    const existingItems = document.querySelectorAll('.order-item[data-item-id]:not([style*="display: none"])');
+    totalFormsInput.value = existingItems.length;
+  }
+  
+  // Pour les nouveaux articles, nous devons les ajouter au formset
+  // Nous allons créer un champ caché pour le nombre total de nouveaux articles
+  let newItemsTotalInput = document.getElementById('new-items-TOTAL_FORMS');
+  if (!newItemsTotalInput) {
+    newItemsTotalInput = document.createElement('input');
+    newItemsTotalInput.type = 'hidden';
+    newItemsTotalInput.name = 'new-items-TOTAL_FORMS';
+    newItemsTotalInput.id = 'new-items-TOTAL_FORMS';
+    document.getElementById('order-form').appendChild(newItemsTotalInput);
+  }
+  
+  const newItems = document.querySelectorAll('.order-item:not([data-item-id]):not([style*="display: none"])');
+  newItemsTotalInput.value = newItems.length;
+}
+
+// Fonctions pour la modale de suppression
+function confirmDelete() {
+  document.getElementById('deleteModal').classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+// Fonction pour afficher tous les items
+function showAllItems() {
+  document.querySelectorAll('.order-item[style*="display: none"]').forEach(item => {
+    item.style.display = '';
+    // Retirer le champ DELETE
+    const deleteInput = item.querySelector('input[name$="-DELETE"]');
+    if (deleteInput) {
+      deleteInput.value = 'False';
+    }
+  });
+  
+  // Cacher l'état vide s'il est affiché
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+  
+  updateTotal();
+  updateManagementForm();
+}
+
+// Gérer la touche Échap
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const deleteModal = document.getElementById('deleteModal');
+    if (!deleteModal.classList.contains('hidden')) {
+      closeDeleteModal();
+    }
+  }
+});
+</script>
+{% endblock %}
+{% comment %} {% extends "admin_user/base.html" %}
+{% block title %}Modifier la commande – OpenFood{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-4 md:p-6">
+
+  <!-- En-tête -->
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <a href="{% url 'orders_list' %}" 
+         class="text-gray-400 hover:text-gray-600 transition-colors duration-150">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900">
+          Modifier la commande #{{ order.id }}
+        </h1>
+        <p class="text-sm text-gray-500 mt-0.5">
+          Restaurant : {{ restaurant.name }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+      <div class="flex items-center gap-2">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Formulaire principal -->
+  <form method="post" id="order-form" class="space-y-8">
+    {% csrf_token %}
+    
+    <!-- Management form du FormSet -->
+    {{ formset.management_form }}
+
+    <!-- =================== INFOS COMMANDE =================== -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-6 pb-4 border-b border-gray-100">
+        Informations de la commande
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Type de commande -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Type de commande
+          </label>
+          {{ order_form.order_type }}
+        </div>
+
+        <!-- Table -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Table
+          </label>
+          {{ order_form.table }}
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <!-- Nom du client -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Nom du client
+          </label>
+          {{ order_form.customer_name }}
+        </div>
+
+        <!-- Téléphone -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Téléphone
+          </label>
+          {{ order_form.customer_phone }}
+        </div>
+      </div>
+
+      <!-- Statut -->
+      <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Statut de la commande
+        </label>
+        {{ order_form.status }}
+      </div>
+
+      <!-- Notes -->
+      <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Notes (optionnel)
+        </label>
+        {{ order_form.notes }}
+      </div>
+    </div>
+
+    <!-- =================== MENU =================== -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-6">
+        Ajouter des articles
+      </h2>
+
+      {% if categories %}
+        {% for category in categories %}
+          <div class="mb-8 last:mb-0">
+            <!-- Titre catégorie -->
+            <div class="mb-4">
+              <h3 class="text-sm font-medium text-gray-900 mb-1">
+                {{ category.name }}
+              </h3>
+              <div class="w-8 h-0.5 bg-primary"></div>
+            </div>
+
+            <!-- Articles de la catégorie -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {% for item in category.items.all %}
+              <div class="group border border-gray-200 rounded-lg p-4 hover:border-primary/50 transition-colors duration-150">
+                <div class="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 class="font-medium text-gray-900">{{ item.name }}</h4>
+                    {% if item.description %}
+                      <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ item.description }}</p>
+                    {% endif %}
+                  </div>
+                  {% if item.image %}
+                    <div class="w-12 h-12 rounded overflow-hidden border border-gray-200">
+                      <img src="{{ item.image.url }}" alt="{{ item.name }}" 
+                           class="w-full h-full object-cover">
+                    </div>
+                  {% endif %}
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div class="font-medium text-primary">
+                    {% if item.discount_price %}
+                      <span class="text-gray-400 line-through text-sm mr-2">{{ item.price }} FCFA</span>
+                      {{ item.discount_price }} FCFA
+                    {% else %}
+                      {{ item.price }} FCFA
+                    {% endif %}
+                  </div>
+                  <button
+                    type="button"
+                    class="px-3 py-1.5 text-xs font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-150"
+                    onclick="addItem('{{ item.id }}', '{{ item.name|escapejs }}', '{{ item.discount_price|default:item.price }}', '{% if item.image %}{{ item.image.url }}{% endif %}')">
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+              {% empty %}
+              <div class="col-span-3 p-4 text-center">
+                <p class="text-sm text-gray-500">Aucun plat disponible dans cette catégorie.</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-8 text-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <i class="fas fa-utensils text-gray-400"></i>
+          </div>
+          <p class="text-sm text-gray-500">Aucune catégorie avec plats disponibles.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- =================== ARTICLES DE LA COMMANDE =================== -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-gray-900">
+          Articles de la commande
+        </h2>
+        <div class="text-sm text-gray-500" id="total-price">
+          Total : {{ order.total_amount }} FCFA
+        </div>
+      </div>
+
+      <!-- Conteneur pour les articles -->
+      <div id="order-items-container" class="space-y-3">
+        <!-- Les articles existants et nouveaux seront ajoutés ici dynamiquement -->
+        {% if not existing_items %}
+          <div id="empty-state" class="p-8 text-center border-2 border-dashed border-gray-200 rounded-lg">
+            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <i class="fas fa-shopping-bag text-gray-400"></i>
+            </div>
+            <p class="text-sm text-gray-500">Aucun article ajouté</p>
+            <p class="text-xs text-gray-400 mt-1">Ajoutez des articles depuis le menu ci-dessus</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- =================== ACTIONS =================== -->
+    <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+      <a href="{% url 'orders_list' %}"
+         class="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+        Annuler
+      </a>
+      <button type="button"
+              onclick="confirmDelete()"
+              class="px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-150">
+        Supprimer
+      </button>
+      <button type="submit"
+              id="submit-button"
+              class="px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors duration-150">
+        Mettre à jour
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div id="deleteModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeDeleteModal()"></div>
+    
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+            <i class="fas fa-exclamation-triangle text-red-600"></i>
+          </div>
+          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              Supprimer la commande
+            </h3>
+            <div class="mt-2">
+              <p class="text-sm text-gray-500">
+                Êtes-vous sûr de vouloir supprimer la commande #{{ order.id }} ? Cette action est irréversible.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <form method="post" action="{% url 'delete_order' order.id %}" class="inline">
+          {% csrf_token %}
+          <button type="submit"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+            Supprimer
+          </button>
+        </form>
+        <button type="button"
+                onclick="closeDeleteModal()"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let orderItems = [];
+let formIndex = 0;
+
+// Initialiser avec les articles existants
+document.addEventListener('DOMContentLoaded', function() {
+  {% for item in existing_items %}
+    addExistingItem(
+      '{{ item.id }}',
+      '{{ item.name|escapejs }}',
+      {{ item.price }},
+      {{ item.quantity }},
+      '{% if item.image_url %}{{ item.image_url }}{% endif %}'
+    );
+  {% endfor %}
+  
+  // Mettre à jour le total initial
+  updateTotal();
+  
+  // Appliquer les styles aux champs de formulaire
+  applyFormStyles();
+});
+
+// Fonction pour ajouter un article existant
+function addExistingItem(id, name, price, quantity, imageUrl) {
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+  
+  const newItem = {
+    id: id,
+    name: name,
+    price: price,
+    quantity: quantity,
+    imageUrl: imageUrl,
+    isExisting: true
+  };
+  
+  orderItems.push(newItem);
+  const index = orderItems.length - 1;
+  
+  // Ajouter au DOM
+  const container = document.getElementById('order-items-container');
+  
+  const itemElement = document.createElement('div');
+  itemElement.className = 'flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-gray-50';
+  itemElement.dataset.index = index;
+  
+  itemElement.innerHTML = `
+    <div class="flex-1">
+      <div class="flex items-start gap-3">
+        ${imageUrl ? 
+          `<div class="w-10 h-10 rounded overflow-hidden border border-gray-200">
+            <img src="${imageUrl}" alt="${name}" class="w-full h-full object-cover">
+          </div>` 
+          : ''
+        }
+        <div class="flex-1">
+          <h4 class="font-medium text-gray-900">${name}</h4>
+          <div class="text-sm text-gray-500">${price} FCFA/unité</div>
+        </div>
+      </div>
+      
+      <div class="mt-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="decreaseQuantity(${index})" 
+                  class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+            <i class="fas fa-minus text-xs"></i>
+          </button>
+          <span class="font-medium text-gray-900" id="quantity-${index}">${quantity}</span>
+          <button type="button" onclick="increaseQuantity(${index})" 
+                  class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+            <i class="fas fa-plus text-xs"></i>
+          </button>
+        </div>
+        <div class="font-medium text-primary" id="subtotal-${index}">
+          ${(price * quantity).toFixed(0)} FCFA
+        </div>
+      </div>
+    </div>
+    
+    <button type="button" onclick="removeItem(${index})" 
+            class="p-2 text-gray-400 hover:text-red-500 transition-colors duration-150">
+      <i class="fas fa-trash"></i>
+    </button>
+  `;
+  
+  container.appendChild(itemElement);
+  
+  // Créer les champs cachés pour le formset
+  createHiddenFormFields(newItem, index, true);
+}
+
+// Fonction pour ajouter un nouvel article
+function addItem(id, name, price, imageUrl) {
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+
+  // Vérifier si l'article existe déjà
+  const existingItemIndex = orderItems.findIndex(item => item.id === id);
+  
+  if (existingItemIndex > -1) {
+    // Incrémenter la quantité
+    orderItems[existingItemIndex].quantity += 1;
+    updateItemDisplay(existingItemIndex);
+  } else {
+    // Ajouter un nouvel article
+    const newItem = {
+      id: id,
+      name: name,
+      price: parseFloat(price),
+      quantity: 1,
+      imageUrl: imageUrl,
+      isExisting: false
+    };
+    
+    orderItems.push(newItem);
+    const index = orderItems.length - 1;
+    
+    // Ajouter au DOM
+    const container = document.getElementById('order-items-container');
+    
+    const itemElement = document.createElement('div');
+    itemElement.className = 'flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-gray-50';
+    itemElement.dataset.index = index;
+    
+    itemElement.innerHTML = `
+      <div class="flex-1">
+        <div class="flex items-start gap-3">
+          ${imageUrl ? 
+            `<div class="w-10 h-10 rounded overflow-hidden border border-gray-200">
+              <img src="${imageUrl}" alt="${name}" class="w-full h-full object-cover">
+            </div>` 
+            : ''
+          }
+          <div class="flex-1">
+            <h4 class="font-medium text-gray-900">${name}</h4>
+            <div class="text-sm text-gray-500">${price} FCFA/unité</div>
+          </div>
+        </div>
+        
+        <div class="mt-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button type="button" onclick="decreaseQuantity(${index})" 
+                    class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+              <i class="fas fa-minus text-xs"></i>
+            </button>
+            <span class="font-medium text-gray-900" id="quantity-${index}">1</span>
+            <button type="button" onclick="increaseQuantity(${index})" 
+                    class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100">
+              <i class="fas fa-plus text-xs"></i>
+            </button>
+          </div>
+          <div class="font-medium text-primary" id="subtotal-${index}">
+            ${price} FCFA
+          </div>
+        </div>
+      </div>
+      
+      <button type="button" onclick="removeItem(${index})" 
+              class="p-2 text-gray-400 hover:text-red-500 transition-colors duration-150">
+        <i class="fas fa-trash"></i>
+      </button>
+    `;
+    
+    container.appendChild(itemElement);
+    
+    // Créer les champs cachés pour le formset
+    createHiddenFormFields(newItem, index, false);
+  }
+
+  updateTotal();
+  updateFormSetManagement();
+}
+
+// Créer les champs cachés pour le formset
+function createHiddenFormFields(item, index, isExisting) {
+  const form = document.getElementById('order-form');
+  
+  // Si c'est un article existant, on utilise les champs existants du formset
+  // Sinon, on crée de nouveaux champs pour un nouvel article
+  if (!isExisting) {
+    // Champ menu_item
+    const menuItemField = document.createElement('input');
+    menuItemField.type = 'hidden';
+    menuItemField.name = `items-${index}-menu_item`;
+    menuItemField.value = item.id;
+    menuItemField.id = `id_items-${index}-menu_item`;
+    form.appendChild(menuItemField);
+    
+    // Champ quantity
+    const quantityField = document.createElement('input');
+    quantityField.type = 'hidden';
+    quantityField.name = `items-${index}-quantity`;
+    quantityField.value = item.quantity;
+    quantityField.id = `id_items-${index}-quantity`;
+    form.appendChild(quantityField);
+    
+    // Champ DELETE
+    const deleteField = document.createElement('input');
+    deleteField.type = 'hidden';
+    deleteField.name = `items-${index}-DELETE`;
+    deleteField.value = 'False';
+    deleteField.id = `id_items-${index}-DELETE`;
+    form.appendChild(deleteField);
+  }
+}
+
+// Mettre à jour les champs du formset
+function updateFormFields(index) {
+  const item = orderItems[index];
+  
+  const quantityField = document.getElementById(`id_items-${index}-quantity`);
+  if (quantityField) {
+    quantityField.value = item.quantity;
+  }
+}
+
+// Mettre à jour le management form du formset
+function updateFormSetManagement() {
+  const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+  if (totalForms) {
+    totalForms.value = orderItems.length;
+  }
+}
+
+// Fonction pour mettre à jour l'affichage d'un article
+function updateItemDisplay(index) {
+  const item = orderItems[index];
+  document.getElementById(`quantity-${index}`).textContent = item.quantity;
+  document.getElementById(`subtotal-${index}`).textContent = `${(item.price * item.quantity).toFixed(0)} FCFA`;
+  
+  updateFormFields(index);
+}
+
+// Fonction pour augmenter la quantité
+function increaseQuantity(index) {
+  orderItems[index].quantity += 1;
+  updateItemDisplay(index);
+  updateTotal();
+}
+
+// Fonction pour diminuer la quantité
+function decreaseQuantity(index) {
+  if (orderItems[index].quantity > 1) {
+    orderItems[index].quantity -= 1;
+    updateItemDisplay(index);
+    updateTotal();
+  }
+}
+
+// Fonction pour supprimer un article
+function removeItem(index) {
+  const item = orderItems[index];
+  
+  if (item.isExisting) {
+    // Pour les articles existants, marquer comme DELETE
+    // Chercher le champ DELETE correspondant
+    const forms = document.querySelectorAll('[id^="id_items-"][id$="-DELETE"]');
+    forms.forEach(form => {
+      if (form.value === 'False') {
+        form.value = 'True';
+      }
+    });
+  } else {
+    // Pour les nouveaux articles, supprimer les champs
+    const menuItemField = document.getElementById(`id_items-${index}-menu_item`);
+    const quantityField = document.getElementById(`id_items-${index}-quantity`);
+    const deleteField = document.getElementById(`id_items-${index}-DELETE`);
+    
+    if (menuItemField) menuItemField.remove();
+    if (quantityField) quantityField.remove();
+    if (deleteField) deleteField.remove();
+  }
+  
+  // Supprimer du DOM
+  const itemElement = document.querySelector(`[data-index="${index}"]`);
+  if (itemElement) {
+    itemElement.remove();
+  }
+  
+  // Supprimer du tableau
+  orderItems.splice(index, 1);
+  
+  // Réindexer les éléments restants
+  const remainingItems = document.querySelectorAll('[data-index]');
+  remainingItems.forEach((element, newIndex) => {
+    element.dataset.index = newIndex;
+  });
+  
+  // Si plus d'articles, afficher l'état vide
+  if (orderItems.length === 0) {
+    const container = document.getElementById('order-items-container');
+    container.innerHTML = `
+      <div id="empty-state" class="p-8 text-center border-2 border-dashed border-gray-200 rounded-lg">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+          <i class="fas fa-shopping-bag text-gray-400"></i>
+        </div>
+        <p class="text-sm text-gray-500">Aucun article ajouté</p>
+        <p class="text-xs text-gray-400 mt-1">Ajoutez des articles depuis le menu ci-dessus</p>
+      </div>
+    `;
+  }
+  
+  updateTotal();
+  updateFormSetManagement();
+}
+
+// Fonction pour mettre à jour le total
+function updateTotal() {
+  const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  document.getElementById('total-price').textContent = `Total : ${total.toFixed(0)} FCFA`;
+}
+
+// Fonctions pour la modale de suppression
+function confirmDelete() {
+  document.getElementById('deleteModal').classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+// Appliquer les styles aux champs de formulaire
+function applyFormStyles() {
+  // Style pour les select
+  const selects = document.querySelectorAll('select');
+  selects.forEach(select => {
+    select.className = 'w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary';
+  });
+  
+  // Style pour les inputs
+  const inputs = document.querySelectorAll('input[type="text"], input[type="tel"]');
+  inputs.forEach(input => {
+    input.className = 'w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-gray-400';
+  });
+  
+  // Style pour les textareas
+  const textareas = document.querySelectorAll('textarea');
+  textareas.forEach(textarea => {
+    textarea.className = 'w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-gray-400';
+    textarea.rows = 3;
+  });
+  
+  // Initialiser le management form
+  updateFormSetManagement();
+}
+
+// Fermer la modale avec Échap
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const deleteModal = document.getElementById('deleteModal');
+    if (!deleteModal.classList.contains('hidden')) {
+      closeDeleteModal();
+    }
+  }
+});
+</script>
+{% endblock %} {% endcomment %}

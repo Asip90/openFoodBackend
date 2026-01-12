@@ -1,0 +1,661 @@
+<!-- templates/admin_user/settings.html -->
+{% extends "admin_user/base.html" %}
+
+{% block title %}Paramètres - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 md:p-6">
+
+  <!-- En-tête -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900 mb-1">
+          Paramètres du restaurant
+        </h1>
+        <p class="text-sm text-gray-500">
+          Gérez les informations de base de votre restaurant
+        </p>
+      </div>
+      
+      <a href="{% url 'dashboard' %}" 
+         class="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-150 flex items-center gap-2">
+        <i class="fas fa-arrow-left text-xs"></i>
+        Retour au dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="mb-6">
+    {% for message in messages %}
+    <div class="p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-700{% elif message.tags == 'info' %}bg-blue-50 border-blue-200 text-blue-700{% else %}bg-gray-50 border-gray-200 text-gray-700{% endif %}">
+      <div class="flex items-center gap-2">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'info' %}fa-info-circle{% else %}fa-bell{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <!-- Formulaire -->
+    <div class="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Informations de base -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i class="fas fa-store text-primary text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Informations du restaurant</h3>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-2">
+                Nom du restaurant *
+              </label>
+              <input type="text" 
+                     name="name" 
+                     value="{{ restaurant.name }}"
+                     required
+                     class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+                     placeholder="Nom de votre restaurant">
+              <p class="text-xs text-gray-400 mt-1">Ce nom sera visible par vos clients</p>
+            </div>
+            
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea name="description" 
+                        rows="3"
+                        class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+                        placeholder="Décrivez votre restaurant...">{{ restaurant.description|default:"" }}</textarea>
+              <p class="text-xs text-gray-400 mt-1">Quelques mots sur votre cuisine, votre ambiance, etc.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i class="fas fa-address-book text-primary text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Coordonnées</h3>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-2">
+                  Téléphone *
+                </label>
+                <input type="tel" 
+                       name="phone" 
+                       value="{{ restaurant.phone }}"
+                       required
+                       class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+                       placeholder="+33 1 23 45 67 89">
+                <p class="text-xs text-gray-400 mt-1">Pour les réservations et livraisons</p>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-2">
+                  Email *
+                </label>
+                <input type="email" 
+                       name="email" 
+                       value="{{ restaurant.email }}"
+                       required
+                       class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+                       placeholder="contact@restaurant.com">
+                <p class="text-xs text-gray-400 mt-1">Pour les notifications et contacts</p>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-2">
+                Adresse complète *
+              </label>
+              <input type="text" 
+                     name="address" 
+                     value="{{ restaurant.address }}"
+                     required
+                     class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+                     placeholder="123 Rue du Restaurant, 75000 Paris">
+              <p class="text-xs text-gray-400 mt-1">Pour les livraisons et la localisation</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horaires d'ouverture -->
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i class="fas fa-clock text-primary text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Horaires d'ouverture</h3>
+          </div>
+          
+          <div class="space-y-3">
+            {% for day, schedule in schedules.items %}
+            <div class="flex items-center justify-between p-3 bg-gray-50/50 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+              <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                  <span class="text-xs font-medium text-gray-600">{{ day|slice:":1"|upper }}</span>
+                </div>
+                <span class="text-sm font-medium text-gray-700">{{ day|title }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <select name="{{ day }}_ouverture"
+                        class="px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-200">
+                  <option value="">Fermé</option>
+                  {% for hour in hours %}
+                  <option value="{{ hour }}" {% if schedule.ouverture == hour %}selected{% endif %}>{{ hour }}</option>
+                  {% endfor %}
+                </select>
+                <span class="text-gray-400 text-xs">-</span>
+                <select name="{{ day }}_fermeture"
+                        class="px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-200">
+                  <option value="">Fermé</option>
+                  {% for hour in hours %}
+                  <option value="{{ hour }}" {% if schedule.fermeture == hour %}selected{% endif %}>{{ hour }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Les heures sont en format 24h. Laissez vide pour "Fermé".</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="pt-4 border-t border-gray-100">
+          <div class="flex items-center justify-between">
+            <button type="reset" 
+                    class="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2">
+              <i class="fas fa-redo text-xs"></i>
+              Réinitialiser
+            </button>
+            <button type="submit" 
+                    class="px-6 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md">
+              <i class="fas fa-save text-xs"></i>
+              Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Aperçu et informations -->
+    <div class="space-y-6">
+      <!-- Carte d'identité -->
+      <div class="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-id-card text-blue-600 text-sm"></i>
+          </div>
+          <h3 class="text-sm font-medium text-gray-900">Carte d'identité</h3>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="p-5 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-100">
+            <div class="flex items-center gap-4 mb-5">
+              {% if restaurant.logo %}
+              <img src="{{ restaurant.logo.url }}" 
+                   alt="{{ restaurant.name }}"
+                   class="w-14 h-14 rounded-lg object-cover border border-gray-200">
+              {% else %}
+              <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-primary to-primary/80 text-white flex items-center justify-center text-xl font-bold shadow-sm">
+                {{ restaurant.name|slice:":2"|upper }}
+              </div>
+              {% endif %}
+              <div>
+                <h4 id="previewName" class="font-semibold text-gray-900 text-lg">{{ restaurant.name }}</h4>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">
+                    Restaurant
+                  </span>
+                  <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">
+                    {% if restaurant.is_active %}● Actif{% else %}● Inactif{% endif %}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-phone text-gray-600 text-sm"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 mb-1">Téléphone</p>
+                  <p id="previewPhone" class="text-sm text-gray-800">{{ restaurant.phone|default:"Non renseigné" }}</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-envelope text-gray-600 text-sm"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 mb-1">Email</p>
+                  <p id="previewEmail" class="text-sm text-gray-800">{{ restaurant.email|default:"Non renseigné" }}</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-map-marker-alt text-gray-600 text-sm"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500 mb-1">Adresse</p>
+                  <p id="previewAddress" class="text-sm text-gray-800">{{ restaurant.address|default:"Adresse non renseignée" }}</p>
+                </div>
+              </div>
+              
+              {% if restaurant.description %}
+              <div class="pt-4 border-t border-gray-100">
+                <p class="text-xs font-medium text-gray-500 mb-2">Description</p>
+                <p id="previewDescription" class="text-sm text-gray-600 leading-relaxed">{{ restaurant.description }}</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          
+          <!-- Métriques -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-4 bg-gray-50 rounded-lg text-center">
+              <p class="text-xs text-gray-500 mb-1">ID Restaurant</p>
+              <p class="text-sm font-semibold text-gray-900">{{ restaurant.id|default:"N/A" }}</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg text-center">
+              <p class="text-xs text-gray-500 mb-1">Mise à jour</p>
+              <p class="text-sm font-semibold text-gray-900">{{ restaurant.updated_at|date:"d/m/y"|default:"N/A" }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horaires d'ouverture - Aperçu -->
+      <div class="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <i class="fas fa-calendar-alt text-blue-600 text-sm"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900">Horaires d'ouverture</h3>
+          </div>
+          <span class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
+            {{ restaurant.get_opening_days_count }} jours/semaine
+          </span>
+        </div>
+        
+        <div class="space-y-2">
+          {% for day, schedule in schedules.items %}
+          <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200 group">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg {% if schedule.ouverture and schedule.fermeture %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %} flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <span class="text-xs font-bold">{{ day|slice:":3"|upper }}</span>
+              </div>
+              <span class="text-sm text-gray-700">{{ day|title }}</span>
+            </div>
+            <div class="text-sm">
+              {% if schedule.ouverture and schedule.fermeture %}
+              <span class="text-gray-900 font-medium">{{ schedule.ouverture }} - {{ schedule.fermeture }}</span>
+              {% else %}
+              <span class="text-gray-400 italic">Fermé</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        
+        <div class="mt-6 pt-6 border-t border-gray-200">
+          <p class="text-xs text-gray-400 flex items-center gap-1.5">
+            <i class="fas fa-info-circle text-gray-300"></i>
+            Ces horaires sont affichés sur votre page publique.
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions rapides -->
+      <div class="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
+            <i class="fas fa-bolt text-yellow-600 text-sm"></i>
+          </div>
+          <h3 class="text-sm font-medium text-gray-900">Actions rapides</h3>
+        </div>
+        
+        <div class="space-y-3">
+          <a href="{% url 'customization' %}" 
+             class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200 group hover:border-primary/30">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <i class="fas fa-palette text-primary text-sm"></i>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-700">Personnalisation</p>
+                <p class="text-xs text-gray-500">Modifier l'apparence</p>
+              </div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200"></i>
+          </a>
+          
+          <a href="{% url 'menus_list' %}" 
+             class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200 group hover:border-purple-300">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <i class="fas fa-utensils text-purple-600 text-sm"></i>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-700">Gestion du menu</p>
+                <p class="text-xs text-gray-500">Modifier les plats</p>
+              </div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all duration-200"></i>
+          </a>
+          
+          <button onclick="toggleRestaurantStatus()"
+             class="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200 group hover:border-red-300">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br {% if restaurant.is_active %}from-red-100 to-red-50{% else %}from-green-100 to-green-50{% endif %} flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <i class="fas fa-power-off {% if restaurant.is_active %}text-red-600{% else %}text-green-600{% endif %} text-sm"></i>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-700">Statut du restaurant</p>
+                <p class="text-xs text-gray-500">
+                  {% if restaurant.is_active %}
+                  Désactiver temporairement
+                  {% else %}
+                  Réactiver
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+            <div class="w-6 h-6 rounded-full {% if restaurant.is_active %}bg-red-100 text-red-600{% else %}bg-green-100 text-green-600{% endif %} flex items-center justify-center text-xs font-bold">
+              {% if restaurant.is_active %}!{% else %}✓{% endif %}
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mise à jour en temps réel de l'aperçu
+    const nameInput = document.querySelector('input[name="name"]');
+    const descriptionInput = document.querySelector('textarea[name="description"]');
+    const phoneInput = document.querySelector('input[name="phone"]');
+    const emailInput = document.querySelector('input[name="email"]');
+    const addressInput = document.querySelector('input[name="address"]');
+    
+    const previewName = document.getElementById('previewName');
+    const previewDescription = document.getElementById('previewDescription');
+    const previewPhone = document.getElementById('previewPhone');
+    const previewEmail = document.getElementById('previewEmail');
+    const previewAddress = document.getElementById('previewAddress');
+    
+    // Fonction pour mettre à jour l'aperçu
+    function updatePreview() {
+        if (previewName && nameInput) {
+            previewName.textContent = nameInput.value || 'Nom du restaurant';
+        }
+        if (previewDescription && descriptionInput) {
+            if (descriptionInput.value) {
+                if (!previewDescription.parentElement) {
+                    const descriptionContainer = document.createElement('div');
+                    descriptionContainer.className = 'pt-4 border-t border-gray-100';
+                    descriptionContainer.id = 'descriptionContainer';
+                    previewAddress.parentElement.parentElement.appendChild(descriptionContainer);
+                    
+                    const descriptionTitle = document.createElement('p');
+                    descriptionTitle.className = 'text-xs font-medium text-gray-500 mb-2';
+                    descriptionTitle.textContent = 'Description';
+                    
+                    const descriptionText = document.createElement('p');
+                    descriptionText.id = 'previewDescription';
+                    descriptionText.className = 'text-sm text-gray-600 leading-relaxed';
+                    descriptionText.textContent = descriptionInput.value;
+                    
+                    descriptionContainer.appendChild(descriptionTitle);
+                    descriptionContainer.appendChild(descriptionText);
+                } else {
+                    previewDescription.textContent = descriptionInput.value;
+                }
+            } else {
+                const container = document.getElementById('descriptionContainer');
+                if (container) {
+                    container.remove();
+                }
+            }
+        }
+        if (previewPhone && phoneInput) {
+            previewPhone.textContent = phoneInput.value || 'Non renseigné';
+        }
+        if (previewEmail && emailInput) {
+            previewEmail.textContent = emailInput.value || 'Non renseigné';
+        }
+        if (previewAddress && addressInput) {
+            previewAddress.textContent = addressInput.value || 'Adresse non renseignée';
+        }
+    }
+    
+    // Écouter les changements
+    if (nameInput) nameInput.addEventListener('input', updatePreview);
+    if (descriptionInput) descriptionInput.addEventListener('input', updatePreview);
+    if (phoneInput) phoneInput.addEventListener('input', updatePreview);
+    if (emailInput) emailInput.addEventListener('input', updatePreview);
+    if (addressInput) addressInput.addEventListener('input', updatePreview);
+    
+    // Validation du formulaire
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('border-red-300', 'bg-red-50');
+                    field.classList.remove('border-gray-200', 'bg-white');
+                    
+                    // Ajouter un message d'erreur
+                    let errorMessage = field.parentElement.querySelector('.text-red-500');
+                    if (!errorMessage) {
+                        errorMessage = document.createElement('p');
+                        errorMessage.className = 'text-xs text-red-500 mt-1 flex items-center gap-1';
+                        errorMessage.innerHTML = '<i class="fas fa-exclamation-circle text-xs"></i> Ce champ est obligatoire';
+                        field.parentElement.appendChild(errorMessage);
+                    }
+                } else {
+                    field.classList.remove('border-red-300', 'bg-red-50');
+                    field.classList.add('border-gray-200', 'bg-white');
+                    
+                    // Supprimer le message d'erreur
+                    const errorMessage = field.parentElement.querySelector('.text-red-500');
+                    if (errorMessage) {
+                        errorMessage.remove();
+                    }
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Afficher un message d'erreur général
+                if (!document.querySelector('.global-error')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'global-error p-4 rounded-lg border bg-red-50 border-red-200 text-red-700 mb-6 animate-pulse';
+                    errorDiv.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Veuillez remplir tous les champs obligatoires (*)</span>
+                        </div>
+                    `;
+                    form.parentElement.insertBefore(errorDiv, form);
+                    
+                    // Supprimer après 5 secondes
+                    setTimeout(() => errorDiv.remove(), 5000);
+                }
+                
+                // Scroll vers le premier champ invalide
+                const firstInvalid = form.querySelector('.border-red-300');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
+                }
+            }
+        });
+    }
+    
+    // Gestion des horaires - Mise à jour en temps réel
+    const daySelects = document.querySelectorAll('select[name$="_ouverture"], select[name$="_fermeture"]');
+    daySelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const dayName = this.name.split('_')[0];
+            const ouvertureSelect = document.querySelector(`select[name="${dayName}_ouverture"]`);
+            const fermetureSelect = document.querySelector(`select[name="${dayName}_fermeture"]`);
+            
+            // Trouver l'élément d'affichage correspondant
+            const previewItems = document.querySelectorAll('[class*="hover:bg-gray-50"]');
+            let previewItem = null;
+            
+            previewItems.forEach(item => {
+                if (item.textContent.includes(dayName.charAt(0).toUpperCase() + dayName.slice(1))) {
+                    previewItem = item;
+                }
+            });
+            
+            if (previewItem) {
+                const timeSpan = previewItem.querySelector('.text-gray-900') || previewItem.querySelector('.text-gray-400');
+                const dayIcon = previewItem.querySelector('.w-8.h-8');
+                
+                if (ouvertureSelect.value && fermetureSelect.value) {
+                    if (timeSpan) {
+                        timeSpan.textContent = `${ouvertureSelect.value} - ${fermetureSelect.value}`;
+                        timeSpan.className = 'text-gray-900 font-medium';
+                    }
+                    if (dayIcon) {
+                        dayIcon.classList.remove('bg-gray-100', 'text-gray-500');
+                        dayIcon.classList.add('bg-green-100', 'text-green-700');
+                    }
+                } else {
+                    if (timeSpan) {
+                        timeSpan.textContent = 'Fermé';
+                        timeSpan.className = 'text-gray-400 italic';
+                    }
+                    if (dayIcon) {
+                        dayIcon.classList.remove('bg-green-100', 'text-green-700');
+                        dayIcon.classList.add('bg-gray-100', 'text-gray-500');
+                    }
+                }
+                
+                // Animation de feedback
+                previewItem.classList.add('bg-green-50', 'border', 'border-green-200');
+                setTimeout(() => {
+                    previewItem.classList.remove('bg-green-50', 'border', 'border-green-200');
+                }, 1000);
+            }
+        });
+    });
+    
+    // Gestion du bouton de statut
+    window.toggleRestaurantStatus = function() {
+        if (confirm('Êtes-vous sûr de vouloir modifier le statut de votre restaurant ?')) {
+            // Simuler l'envoi d'une requête
+            const statusBtn = document.querySelector('button[onclick="toggleRestaurantStatus()"]');
+            const statusIcon = statusBtn.querySelector('.fa-power-off');
+            const statusBadge = statusBtn.querySelector('.w-6.h-6');
+            const statusText = statusBtn.querySelector('.text-xs.text-gray-500');
+            
+            // Toggle visuel
+            if (statusIcon.classList.contains('text-red-600')) {
+                // Passer à inactif
+                statusIcon.classList.remove('text-red-600');
+                statusIcon.classList.add('text-green-600');
+                statusBadge.classList.remove('bg-red-100', 'text-red-600');
+                statusBadge.classList.add('bg-green-100', 'text-green-600');
+                statusBadge.textContent = '✓';
+                statusText.textContent = 'Réactiver';
+                statusBtn.querySelector('.w-8.h-8').classList.remove('from-red-100', 'to-red-50');
+                statusBtn.querySelector('.w-8.h-8').classList.add('from-green-100', 'to-green-50');
+            } else {
+                // Passer à actif
+                statusIcon.classList.remove('text-green-600');
+                statusIcon.classList.add('text-red-600');
+                statusBadge.classList.remove('bg-green-100', 'text-green-600');
+                statusBadge.classList.add('bg-red-100', 'text-red-600');
+                statusBadge.textContent = '!';
+                statusText.textContent = 'Désactiver temporairement';
+                statusBtn.querySelector('.w-8.h-8').classList.remove('from-green-100', 'to-green-50');
+                statusBtn.querySelector('.w-8.h-8').classList.add('from-red-100', 'to-red-50');
+            }
+            
+            // Animation
+            statusBtn.classList.add('bg-green-50', 'border-green-300');
+            setTimeout(() => {
+                statusBtn.classList.remove('bg-green-50', 'border-green-300');
+            }, 1000);
+            
+            // Ici, vous devriez faire une requête AJAX pour mettre à jour le statut
+            // fetch('/api/restaurant/toggle-status/', { method: 'POST' })
+        }
+    };
+    
+    // Effet de focus sur les champs
+    const formInputs = document.querySelectorAll('input, textarea, select');
+    formInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('ring-1', 'ring-primary/20', 'rounded-lg', 'p-1', '-m-1');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('ring-1', 'ring-primary/20', 'rounded-lg', 'p-1', '-m-1');
+        });
+    });
+    
+    // Style pour les animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes highlight {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #previewName, #previewPhone, #previewEmail, #previewAddress {
+            transition: all 0.3s ease;
+        }
+        
+        .highlight-item {
+            animation: highlight 0.5s ease, fadeIn 0.3s ease;
+        }
+        
+        .smooth-transition {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

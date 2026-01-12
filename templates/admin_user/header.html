@@ -1,0 +1,102 @@
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 sticky top-0 z-40">
+
+  <!-- Titre -->
+  <div class="flex items-center gap-4">
+    <h1 class="text-xl font-semibold text-gray-900">{% block topbar_title %}{% endblock %}</h1>
+  </div>
+
+  <!-- Right section: notifications + user dropdown -->
+  <div class="flex items-center gap-4">
+
+    <!-- Notification -->
+    <div class="relative">
+      <button class="relative text-gray-500 hover:text-gray-700 focus:outline-none p-1">
+        <i class="fas fa-bell text-lg"></i>
+        <span class="absolute top-1 right-1 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+      </button>
+    </div>
+
+    <!-- User dropdown -->
+    <div class="relative" x-data="{ open: false }">
+      <!-- Avatar bouton -->
+      <button @click="open = !open" class="flex items-center gap-2 focus:outline-none group">
+        <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-medium text-sm">
+          {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+        </div>
+        <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200" :class="{'rotate-180': open}"></i>
+      </button>
+
+      <!-- Dropdown menu -->
+      <div x-show="open" @click.outside="open = false" x-transition
+           class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+        <div class="px-4 py-2 border-b border-gray-100">
+          <p class="text-sm font-medium text-gray-900">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+          <p class="text-xs text-gray-500 mt-1">{{ request.user.email }}</p>
+        </div>
+        <div class="py-2">
+          <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <i class="fas fa-user mr-3 text-gray-400"></i> 
+            <span>Mon profil</span>
+          </a>
+          <a href="{% url 'deconnexion' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <i class="fas fa-sign-out-alt mr-3 text-gray-400"></i> 
+            <span>Déconnexion</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</header>
+
+<!-- Alpine.js CDN pour dropdown -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+{% comment %} <!-- TOPBAR -->
+<header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-24 sticky top-0 z-50">
+
+  <!-- Titre -->
+  <h1 class="text-2xl font-bold text-gray-900">{% block topbar_title %}{% endblock %}</h1>
+
+  <!-- Right section: notifications + user dropdown -->
+  <div class="flex items-center gap-6">
+
+    <!-- Notification -->
+    <div class="relative">
+      <button class="relative text-gray-600 hover:text-gray-800 focus:outline-none">
+        <i class="fas fa-bell text-2xl"></i>
+        <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+      </button>
+    </div>
+
+    <!-- User dropdown -->
+    <div class="relative" x-data="{ open: false }">
+      <!-- Avatar bouton -->
+      <button @click="open = !open" class="flex items-center gap-2 focus:outline-none">
+        <div class="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold uppercase text-lg">
+          {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+        </div>
+        <span class="hidden md:block font-bold text-gray-700">{{ request.user.first_name }}</span>
+        <i class="fas fa-chevron-down text-gray-500"></i>
+      </button>
+
+      <!-- Dropdown menu -->
+      <div x-show="open" @click.outside="open = false"
+           class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+        <a href="" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">
+          <i class="fas fa-user mr-2"></i> Profil
+        </a>
+        <a href="" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">
+          <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</header>
+
+<!-- Alpine.js CDN pour dropdown -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script> {% endcomment %}

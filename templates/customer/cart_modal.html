@@ -1,0 +1,151 @@
+<div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-end z-[100]">
+    <div class="bg-secondary w-full md:w-1/3 h-full shadow-lg flex flex-col transform transition-transform duration-300 ease-out translate-x-0" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-primary text-secondary">
+            <h2 id="cart-title" class="text-2xl font-semibold">Votre Panier</h2>
+            <button id="cart-close-button" class="text-secondary hover:text-gray-300">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <div id="cart-items-container" class="flex-grow p-6 overflow-y-auto space-y-4">
+            <!-- Les articles du panier seront injectés ici par JS -->
+            <p class="text-gray-600 text-center" id="empty-cart-message">Votre panier est vide.</p>
+        </div>
+
+        <div class="p-6 border-t border-gray-200">
+            <div class="flex justify-between items-center text-xl font-bold mb-4">
+                <span>Total:</span>
+                <span class="text-primary" id="cart-modal-total">0.00 €</span>
+            </div>
+            
+            <a href="{% url 'checkout' table_token=table_token %}" id="checkout-link" class="btn-luxury w-full text-center py-3 mb-2">
+                Commander maintenant
+            </a>
+            <button id="clear-cart-button" class="w-full text-primary hover:text-red-700 py-3 text-sm transition-colors duration-200">
+                Vider le panier
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cartItemsContainer = document.getElementById('cart-items-container');
+        const cartModalTotal = document.getElementById('cart-modal-total');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const clearCartButton = document.getElementById('clear-cart-button');
+        const checkoutLink = document.getElementById('checkout-link');
+
+
+        async function loadCartItems() {
+            try {
+                const response = await fetch(UPDATE_CART_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ action: 'get_cart' }) // Une action pour récupérer le panier
+                });
+                const data = await response.json();
+                if (data.success) {
+                    renderCartItems(data.cart_items || {}); // Assurez-vous que le backend renvoie 'cart_items'
+                    cartModalTotal.textContent = `${data.total.toFixed(2)} €`;
+                    emptyCartMessage.classList.toggle('hidden', data.count > 0);
+                    checkoutLink.classList.toggle('pointer-events-none', data.count === 0);
+                    checkoutLink.classList.toggle('opacity-50', data.count === 0);
+                    updateCartDisplay(data); // Mettre à jour la navbar aussi
+                }
+            } catch (error) {
+                console.error("Erreur lors du chargement des articles du panier:", error);
+            }
+        }
+
+        function renderCartItems(cart) {
+            cartItemsContainer.innerHTML = '';
+            if (Object.keys(cart).length === 0) {
+                cartItemsContainer.innerHTML = `<p class="text-gray-600 text-center" id="empty-cart-message">Votre panier est vide.</p>`;
+                return;
+            }
+
+            for (const itemId in cart) {
+                const item = cart[itemId];
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex items-center space-x-4 bg-white p-4 rounded-lg shadow-sm';
+                itemElement.innerHTML = `
+                    <img src="${item.image || '/static/placeholder.png'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-md">
+                    <div class="flex-grow">
+                        <p class="font-semibold text-gray-800">{{item.name}}</p>
+                        <p class="text-primary font-bold">${parseFloat(item.price).toFixed(2)} €</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button data-item-id="${itemId}" data-action="decrease" class="cart-qty-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300">-</button>
+                        <span id="qty-${itemId}" class="font-semibold text-lg">${item.quantity}</span>
+                        <button data-item-id="${itemId}" data-action="increase" class="cart-qty-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300">+</button>
+                        <button data-item-id="${itemId}" data-action="remove" class="text-red-500 hover:text-red-700 ml-4">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(itemElement);
+            }
+
+            attachCartEventListeners();
+        }
+
+        function attachCartEventListeners() {
+            cartItemsContainer.querySelectorAll('.cart-qty-btn').forEach(button => {
+                button.onclick = async (event) => {
+                    const itemId = event.target.dataset.itemId;
+                    const action = event.target.dataset.action;
+                    let currentQty = parseInt(document.getElementById(`qty-${itemId}`).textContent);
+                    let newQty = currentQty;
+
+                    if (action === 'increase') {
+                        newQty += 1;
+                    } else if (action === 'decrease') {
+                        newQty -= 1;
+                    }
+
+                    if (action === 'remove' || newQty <= 0) {
+                        await sendCartAction('remove', itemId);
+                    } else {
+                        await sendCartAction('update', itemId, newQty);
+                    }
+                    loadCartItems(); // Recharger les items après l'action
+                };
+            });
+
+            cartItemsContainer.querySelectorAll('button[data-action="remove"]').forEach(button => {
+                button.onclick = async (event) => {
+                    const itemId = event.target.closest('button').dataset.itemId;
+                    await sendCartAction('remove', itemId);
+                    loadCartItems();
+                };
+            });
+        }
+
+        clearCartButton.addEventListener('click', async () => {
+            if (confirm("Voulez-vous vraiment vider votre panier ?")) {
+                await sendCartAction('clear_cart'); // Vous devrez ajouter cette action à votre backend
+                loadCartItems();
+            }
+        });
+
+        // Modifier le backend pour l'action 'get_cart' et 'clear_cart'
+        // Dans views.py, update_cart:
+        // ...
+        // if action == "get_cart":
+        //     return JsonResponse({
+        //         "success": True,
+        //         "cart_items": cart,
+        //         "total": total,
+        //         "count": len(cart)
+        //     })
+        // elif action == "clear_cart":
+        //     request.session[cart_key] = {}
+        //     request.session.modified = True
+        //     return JsonResponse({"success": True, "total": 0, "count": 0})
+        // ...
+    });
+</script>

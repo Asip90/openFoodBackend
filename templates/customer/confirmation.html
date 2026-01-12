@@ -1,0 +1,169 @@
+
+<!-- confirmation.html -->
+{% extends 'customer/base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto text-center">
+    <!-- Success Icon -->
+    <div class="mb-8">
+        <div class="mx-auto h-24 w-24 bg-green-100 rounded-full flex items-center justify-center">
+            <svg class="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Confirmation Message -->
+    <h1 class="text-4xl font-bold mb-4 primary-text">Commande confirmée !</h1>
+    <p class="text-xl text-gray-600 mb-8">
+        Merci pour votre commande. Notre équipe cuisine prépare vos plats avec soin.
+    </p>
+    
+    <!-- Order Details -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
+        <div class="space-y-6">
+            <div>
+                <p class="text-sm text-gray-500 mb-1">Numéro de commande</p>
+                <p class="text-3xl font-bold secondary-text">{{ order.id }}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Heure de commande</p>
+                    <p class="font-medium">{{ order.created_at|date:"H:i" }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Table</p>
+                    <p class="font-medium">{{ order.table.name }}</p>
+                </div>
+            </div>
+            
+            <div class="pt-6 border-t border-gray-200">
+                <h3 class="text-lg font-bold mb-4">Détails de la commande</h3>
+                <div class="space-y-3">
+                    {% for item in order.items.all %}
+                    <div class="flex justify-between">
+                        <span>{{ item.menu_item.name }} × {{ item.quantity }}</span>
+                        <span class="font-medium">{{ item.total_price }} €</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="pt-6 border-t border-gray-200">
+                    <div class="flex justify-between text-lg font-bold">
+                        <span>Total</span>
+                        <span class="secondary-text">{{ order.total }} €</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Info -->
+    <div class="space-y-4 text-gray-600">
+        <p>
+            Vous recevrez une notification sur votre téléphone lorsque votre commande sera prête.
+        </p>
+        <p>
+            Pour toute question, n'hésitez pas à contacter notre équipe.
+        </p>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="mt-12 space-y-4">
+        <a 
+            href="{% url 'client_menu' table_token=table_token %}"
+            class="inline-block px-8 py-3 border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-colors"
+        >
+            Commander à nouveau
+        </a>
+        <p class="text-sm text-gray-500">
+            Ou restez à votre table, votre commande arrive bientôt.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Clear cart on confirmation page
+    document.addEventListener('alpine:initialized', () => {
+        Alpine.store('appData').clearCart();
+    });
+</script>
+{% endblock %}
+{% comment %} {% extends "customer/base.html" %}
+{% load static %}
+
+{% block title %}Confirmation de Commande - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-16 text-center">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-10 md:p-12 border border-gray-100">
+        <div class="text-center mb-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-green-500 mx-auto mb-6 animate-bounce-in" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h1 class="text-5xl font-extrabold text-gray-900 mb-4" style="color: var(--primary-color);">
+                Commande Confirmée !
+            </h1>
+            <p class="text-xl text-gray-700 leading-relaxed">
+                Merci d'avoir commandé chez <span class="font-semibold" style="color: var(--secondary-color);">{{ restaurant.name }}</span>.
+                Votre commande a été reçue avec succès et est en cours de traitement.
+            </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-6 mb-8 border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Détails de votre commande</h2>
+            <div class="text-left text-lg text-gray-700 space-y-2">
+                <p><strong>Numéro de commande:</strong> <span class="font-medium text-primary-color">{{ order.order_number }}</span></p>
+                <p><strong>Date:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                <p><strong>Total:</strong> <span class="text-primary-color font-bold">{{ order.total|floatformat:2 }}€</span></p>
+                <p><strong>Client:</strong> {{ order.customer_name }}</p>
+                <p><strong>Table:</strong> {{ order.table.number }}</p>
+            </div>
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-left">Articles commandés :</h3>
+        <ul class="text-left space-y-3 mb-8">
+            {% for item in order.items.all %}
+                <li class="flex justify-between items-center text-lg text-gray-700 border-b border-gray-100 pb-2 last:border-b-0">
+                    <span>{{ item.menu_item.name }} x {{ item.quantity }}</span>
+                    <span class="font-semibold">{{ item.get_total|floatformat:2 }}€</span>
+                </li>
+            {% endfor %}
+        </ul>
+
+        {% comment %} <a href="{% url 'client_menu' table_token=table.token %}" 
+           class="inline-flex items-center bg-primary-color text-white py-4 px-8 rounded-full text-xl font-bold hover:bg-opacity-90 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-primary-color focus:ring-opacity-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+            </svg>
+            Retour au menu
+        </a> 
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simple animation pour le checkmark
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkmark = document.querySelector('.animate-bounce-in');
+        if (checkmark) {
+            checkmark.style.animation = 'bounceIn 0.8s forwards';
+        }
+    });
+</script>
+<style>
+    @keyframes bounceIn {
+        0% { transform: scale(0.3); opacity: 0; }
+        50% { transform: scale(1.1); opacity: 1; }
+        70% { transform: scale(0.9); }
+        100% { transform: scale(1); }
+    }
+    .animate-bounce-in {
+        opacity: 0; /* Hidden by default, animated in JS */
+    }
+</style>
+{% endblock %} {% endcomment %}

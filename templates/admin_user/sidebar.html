@@ -1,0 +1,238 @@
+{% load static %}
+<!-- SIDEBAR OPENFOOD -->
+{% comment %} <aside class="bg-gray-50 w-64 min-h-screen border-r border-gray-100 flex flex-col fixed"> {% endcomment %}
+<aside class="bg-gray-50  w-64 pt-5 fixed inset-y-0 left-0 border-r border-gray-100 flex flex-col overflow-y-auto scroll-smooth scrollbar-hide">
+<style>
+  .scrollbar-hide {
+    -ms-overflow-style: none;     /* IE & Edge */
+    scrollbar-width: none;        /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;                /* Chrome, Safari */
+  }
+</style>
+  <!-- LOGO -->
+  <div class="h-20 flex items-center justify-start px-6 border-b border-gray-100">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+        <i class="fas fa-utensils text-white text-base"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-dark text-lg">OpenFood</h1>
+        <p class="text-xs text-gray-500 -mt-1">Restaurant Manager</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <nav class="flex-1 flex flex-col gap-1 p-4">
+    {% url 'dashboard' as dashboard_url %}
+    {% url 'orders_list' as orders_url %}
+    {% url 'menus_list' as menus_url %}
+    {% url 'customization' as customization_url %}
+    {% url 'tables_list' as tables_url %}
+    {% url 'restaurant_settings' as settings_url %}
+
+    <!-- Dashboard -->
+    <a href="{{ dashboard_url }}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if request.path == dashboard_url %}bg-primary/5 border-l-4 border-primary{% else %}hover:bg-background{% endif %}">
+      <div class="h-8 w-8 rounded-lg flex items-center justify-center {% if request.path == dashboard_url %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        <i class="fas fa-chart-pie text-sm"></i>
+      </div>
+      <span class="{% if request.path == dashboard_url %}text-dark font-semibold{% else %}text-gray-700{% endif %}">Dashboard</span>
+    </a>
+
+    <!-- Commandes -->
+    <a href="{{ orders_url }}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if request.path == orders_url %}bg-primary/5 border-l-4 border-primary{% else %}hover:bg-background{% endif %}">
+      <div class="h-8 w-8 rounded-lg flex items-center justify-center {% if request.path == orders_url %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        <i class="fas fa-shopping-bag text-sm"></i>
+      </div>
+      <span class="{% if request.path == orders_url %}text-dark font-semibold{% else %}text-gray-700{% endif %}">Commandes</span>
+    </a>
+
+    <!-- Menus -->
+    <a href="{{ menus_url }}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if request.path == menus_url %}bg-primary/5 border-l-4 border-primary{% else %}hover:bg-background{% endif %}">
+      <div class="h-8 w-8 rounded-lg flex items-center justify-center {% if request.path == menus_url %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        <i class="fas fa-utensils text-sm"></i>
+      </div>
+      <span class="{% if request.path == menus_url %}text-dark font-semibold{% else %}text-gray-700{% endif %}">Menus</span>
+    </a>
+
+    <!-- Personnalisation -->
+    <a href="{{ customization_url }}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if request.path == customization_url %}bg-primary/5 border-l-4 border-primary{% else %}hover:bg-background{% endif %}">
+      <div class="h-8 w-8 rounded-lg flex items-center justify-center {% if request.path == customization_url %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        <i class="fas fa-palette text-sm"></i>
+      </div>
+      <span class="{% if request.path == customization_url %}text-dark font-semibold{% else %}text-gray-700{% endif %}">Personnalisation</span>
+    </a>
+
+    <!-- Tables & QR Codes -->
+    <a href="{{ tables_url }}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if request.path == tables_url %}bg-primary/5 border-l-4 border-primary{% else %}hover:bg-background{% endif %}">
+      <div class="h-8 w-8 rounded-lg flex items-center justify-center {% if request.path == tables_url %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        <i class="fas fa-qrcode text-sm"></i>
+      </div>
+      <span class="{% if request.path == tables_url %}text-dark font-semibold{% else %}text-gray-700{% endif %}">Tables & QR</span>
+    </a>
+
+    <!-- Payment -->
+    <a href="#"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-background">
+      <div class="h-8 w-8 rounded-lg flex items-center justify-center bg-gray-100 text-gray-600">
+        <i class="fas fa-credit-card text-sm"></i>
+      </div>
+      <span class="text-gray-700">Paiements</span>
+    </a>
+
+    <!-- Paramètres -->
+    <a href="{{ settings_url }}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if request.path == settings_url %}bg-primary/5 border-l-4 border-primary{% else %}hover:bg-background{% endif %}">
+      <div class="h-8 w-8 rounded-lg flex items-center justify-center {% if request.path == settings_url %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        <i class="fas fa-cog text-sm"></i>
+      </div>
+      <span class="{% if request.path == settings_url %}text-dark font-semibold{% else %}text-gray-700{% endif %}">Paramètres</span>
+    </a>
+
+  </nav>
+
+  <!-- PROFILE & LOGOUT -->
+  <div class="p-4 border-t border-gray-100">
+    <div class="flex items-center gap-3 px-4 py-3 bg-background rounded-lg">
+      <div class="h-9 w-9 bg-dark rounded-full flex items-center justify-center">
+        <i class="fas fa-user text-white text-sm"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-medium text-dark">Admin</p>
+        <p class="text-xs text-gray-500">Administrateur</p>
+      </div>
+      <a href="#"
+         class="p-2 text-gray-400 hover:text-red-500 transition-colors duration-200">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+    </div>
+  </div>
+
+</aside>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Logique pour marquer l'onglet actif avec un peu plus de précision
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('nav a');
+    
+    // Fonction pour normaliser les chemins
+    function normalizePath(path) {
+        return path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+    }
+    
+    const normalizedCurrentPath = normalizePath(currentPath);
+    
+    navLinks.forEach(link => {
+        const linkPath = link.getAttribute('href');
+        if (linkPath && linkPath !== '#') {
+            const normalizedLinkPath = normalizePath(linkPath);
+            
+            // Vérifier si le chemin correspond
+            if (normalizedCurrentPath === normalizedLinkPath) {
+                // On active déjà via Django, mais on peut ajouter une classe JS pour des effets supplémentaires
+                link.classList.add('active-tab');
+            }
+        }
+        
+        // Ajouter des effets au survol
+        link.addEventListener('mouseenter', function() {
+            if (!this.classList.contains('active-tab')) {
+                this.style.transform = 'translateX(2px)';
+            }
+        });
+        
+        link.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+    
+    // Gestion spéciale pour la page paiements (si jamais elle est implémentée)
+    if (currentPath.includes('payment') || currentPath.includes('paiement')) {
+        document.querySelector('a[href="#"]').classList.add('bg-primary/5', 'border-l-4', 'border-primary');
+        document.querySelector('a[href="#"] div').classList.remove('bg-gray-100', 'text-gray-600');
+        document.querySelector('a[href="#"] div').classList.add('bg-primary', 'text-white');
+        document.querySelector('a[href="#"] span').classList.add('text-dark', 'font-semibold');
+    }
+});
+</script>
+{% comment %} {% load static %}
+<!-- SIDEBAR OPENFOOD -->
+<aside class="bg-white w-64 min-h-screen border-r flex flex-col fixed p-4">
+
+  <!-- LOGO -->
+  <div class="h-20 flex items-center justify-center border-b border-gray-200 mb-6">
+    <img src="{% static 'img/logo.png' %}" alt="Logo OpenFood" class="h-14 w-auto">
+  </div>
+
+  <!-- NAVIGATION -->
+  <nav class="flex-1 flex flex-col gap-3 text-base">
+
+    <!-- Dashboard -->
+    <a href="{% url 'dashboard' %}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition">
+      <i class="fas fa-chart-pie text-primary text-lg"></i>
+      <span class="font-semibold text-lg">Dashboard</span>
+    </a>
+
+    <!-- Commandes -->
+    <a href="{% url 'orders_list' %}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition">
+      <i class="fas fa-receipt text-primary text-lg"></i>
+      <span class="font-semibold text-lg">Commandes</span>
+    </a>
+
+    <!-- Menus -->
+    <a href="{% url 'menus_list' %}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition">
+      <i class="fas fa-utensils text-primary text-lg"></i>
+      <span class="font-semibold text-lg">Menus</span>
+    </a>
+
+    <!-- Personnalisation -->
+    <a href="{% url 'customization' %}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition">
+      <i class="fas fa-palette text-primary text-lg"></i>
+      <span class="font-semibold text-lg">Personnalisation</span>
+    </a>
+
+    <!-- Tables & QR Codes -->
+    <a href="{% url 'tables_list' %}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition">
+      <i class="fas fa-qrcode text-primary text-lg"></i>
+      <span class="font-semibold text-lg">Tables & QR</span>
+    </a>
+
+    <!-- Payment -->
+    <a href=""
+       class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition">
+      <i class="fas fa-credit-card text-primary text-lg"></i>
+      <span class="font-semibold text-lg">Paiements</span>
+    </a>
+
+    <!-- Paramètres -->
+    <a href="{% url 'restaurant_settings' %}"
+       class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition">
+      <i class="fas fa-cog text-primary text-lg"></i>
+      <span class="font-semibold text-lg">Paramètres</span>
+    </a>
+
+  </nav>
+
+  <!-- LOGOUT -->
+  <div class="mt-auto pt-4 border-t border-gray-200">
+    <a href=""
+       class="flex items-center justify-center gap-3 px-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">
+      <i class="fas fa-sign-out-alt text-lg"></i>
+      <span>Déconnexion</span>
+    </a>
+  </div>
+
+</aside> {% endcomment %}
