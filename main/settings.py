@@ -134,8 +134,8 @@ DEFAULT_FROM_EMAIL = 'noreply@test.com'
 AUTH_USER_MODEL = 'accounts.User'
 
 LOGIN_URL = "/connexion"
-BACKEND_DOMAIN="http://localhost:8000"
-FRONTEND_BASE_URL="/127.0.0.1:8000"
+BACKEND_DOMAIN="https://monbackend-production.up.railway.app:8000"
+FRONTEND_BASE_URL="https://openfood-ten.vercel.app/"
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
