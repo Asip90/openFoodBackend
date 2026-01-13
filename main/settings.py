@@ -1,28 +1,187 @@
 
-from pathlib import Path
+# from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# # Quick-start development settings - unsuitable for production
+# # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+
+# # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY = 'django-insecure-p*r4iv^!h02ezbb$vy2tpn*9fwn#3x(m$#xhue9(0&ma03c8#$'
+
+# # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = False
+
+# # ALLOWED_HOSTS = []
+
+
+# # Application definition
+
+# INSTALLED_APPS = [
+#     'jazzmin',
+#     'corsheaders',
+#     "rest_framework",
+#     'django.contrib.admin',
+#     'django.contrib.auth',
+#     'django.contrib.contenttypes',
+#     'django.contrib.sessions',
+#     'django.contrib.messages',
+#     'django.contrib.staticfiles',
+#     'base',
+#     'accounts',
+#     'widget_tweaks',
+#     'customer'
+# ]
+
+# MIDDLEWARE = [
+#     "django.middleware.security.SecurityMiddleware",
+#     "whitenoise.middleware.WhiteNoiseMiddleware",
+#     "django.contrib.sessions.middleware.SessionMiddleware",
+#     "django.middleware.common.CommonMiddleware",
+#     'corsheaders.middleware.CorsMiddleware',
+
+#     # 🔴 OBLIGATOIRE : AVANT AuthenticationMiddleware
+#     "customer.middleware.SubdomainMiddleware",
+
+#     "django.middleware.csrf.CsrfViewMiddleware",
+#     "django.contrib.auth.middleware.AuthenticationMiddleware",
+#     "django.contrib.messages.middleware.MessageMiddleware",
+#     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+# ]
+# CORS_ALLOW_ALL_ORIGINS = True
+# ROOT_URLCONF = 'main.urls'
+
+# TEMPLATES = [
+#     {
+#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+#         'DIRS': [
+#             BASE_DIR / 'templates'
+#             ],
+#         'APP_DIRS': True,
+#         'OPTIONS': {
+#             'context_processors': [
+#                 'django.template.context_processors.request',
+#                 'django.contrib.auth.context_processors.auth',
+#                 'django.contrib.messages.context_processors.messages',
+#             ],
+#         },
+#     },
+# ]
+
+# WSGI_APPLICATION = 'main.wsgi.application'
+
+
+# # Database
+# # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
+# # DATABASES = {
+# #     'default': {
+# #         'ENGINE': 'django.db.backends.sqlite3',
+# #         'NAME': BASE_DIR / 'db.sqlite3',
+# #     }
+# # }
+# import os
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": os.getenv("MYSQLDATABASE"),
+#         "USER": os.getenv("MYSQLUSER"),
+#         "PASSWORD": os.getenv("MYSQLPASSWORD"),
+#         "HOST": os.getenv("MYSQLHOST"),
+#         "PORT": os.getenv("MYSQLPORT"),
+#     }
+# }
+
+
+
+# # Password validation
+# # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+
+# AUTH_PASSWORD_VALIDATORS = [
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+#     },
+# ]
+
+
+# # Internationalization
+# # https://docs.djangoproject.com/en/6.0/topics/i18n/
+
+# LANGUAGE_CODE = 'en-us'
+
+# TIME_ZONE = 'UTC'
+
+# USE_I18N = True
+
+# USE_TZ = True
+
+
+# # Static files (CSS, JavaScript, Images)
+# # https://docs.djangoproject.com/en/6.0/howto/static-files/
+
+# # STATIC_URL = 'static/'
+# STATIC_URL = '/static/'
+# STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR.joinpath('media/')
+
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'solutionasitech@gmail.com'  # Remplace par ton email
+# EMAIL_HOST_PASSWORD = 'gqldkxwyvtpjxuur'  # Remplace par ton mot de passe ou un App Password
+# DEFAULT_FROM_EMAIL = 'noreply@test.com'
+
+# AUTH_USER_MODEL = 'accounts.User'
+
+# LOGIN_URL = "/connexion"
+# BACKEND_DOMAIN="https://monbackend-production.up.railway.app:8000"
+# FRONTEND_BASE_URL="https://openfood-ten.vercel.app/"
+
+# ALLOWED_HOSTS = [
+#     "127.0.0.1",
+#     "localhost",
+#     "le-luxury-house.localhost",  # <-- ton sous-domaine
+#     "*",  # temporaire pour tests, pas en prod !
+# ]
+from pathlib import Path
+import os
+
+# --------------------------
+# Chemins du projet
+# --------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --------------------------
+# Sécurité
+# --------------------------
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-fallback-key")  # remplace par secret sur Railway
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-p*r4iv^!h02ezbb$vy2tpn*9fwn#3x(m$#xhue9(0&ma03c8#$'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-# ALLOWED_HOSTS = []
-
-
-# Application definition
-
+# --------------------------
+# Applications
+# --------------------------
 INSTALLED_APPS = [
     'jazzmin',
     'corsheaders',
-    "rest_framework",
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,24 +200,20 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     'corsheaders.middleware.CorsMiddleware',
-
-    # 🔴 OBLIGATOIRE : AVANT AuthenticationMiddleware
     "customer.middleware.SubdomainMiddleware",
-
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'main.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            BASE_DIR / 'templates'
-            ],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -72,90 +227,66 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'main.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-import os
-
+# --------------------------
+# Base de données MySQL
+# --------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQLDATABASE"),
-        "USER": os.getenv("MYSQLUSER"),
-        "PASSWORD": os.getenv("MYSQLPASSWORD"),
-        "HOST": os.getenv("MYSQLHOST"),
-        "PORT": os.getenv("MYSQLPORT"),
+        "NAME": os.getenv("MYSQL_DATABASE"),
+        "USER": os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("MYSQL_HOST"),
+        "PORT": os.getenv("MYSQL_PORT", "3306"),
     }
 }
 
-
-
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
+# --------------------------
+# Validation des mots de passe
+# --------------------------
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
+# --------------------------
+# Internationalisation
+# --------------------------
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
-# STATIC_URL = 'static/'
+# --------------------------
+# Fichiers statiques et médias
+# --------------------------
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR.joinpath('media/')
+MEDIA_ROOT = BASE_DIR / 'media/'
 
-
+# --------------------------
+# Email
+# --------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'solutionasitech@gmail.com'  # Remplace par ton email
-EMAIL_HOST_PASSWORD = 'gqldkxwyvtpjxuur'  # Remplace par ton mot de passe ou un App Password
-DEFAULT_FROM_EMAIL = 'noreply@test.com'
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@test.com")
 
+# --------------------------
+# Auth
+# --------------------------
 AUTH_USER_MODEL = 'accounts.User'
-
 LOGIN_URL = "/connexion"
-BACKEND_DOMAIN="https://monbackend-production.up.railway.app:8000"
-FRONTEND_BASE_URL="https://openfood-ten.vercel.app/"
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "le-luxury-house.localhost",  # <-- ton sous-domaine
-    "*",  # temporaire pour tests, pas en prod !
-]
+# --------------------------
+# URL Frontend & Backend
+# --------------------------
+BACKEND_DOMAIN = os.getenv("BACKEND_DOMAIN", "https://monbackend-production.up.railway.app")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "https://openfood-ten.vercel.app/")
